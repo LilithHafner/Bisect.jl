@@ -50,5 +50,13 @@ using Aqua
         | """) # TODO: handle newlines in stdout/stderr.
 
         @test startswith(string(bisect(@__DIR__, "rand()", old="49093a00f4850120d17fa9ef9cae3ff0f37cacfb")), "❌ Bisect failed")
+
+        @test startswith(string(bisect("rand()", old="49093a00f4850120d17fa9ef9cae3ff0f37cacfb", auto_print=false)), """
+        ❌ Bisect failed
+
+        | Commit                                   | Exit code | stdout | stderr |
+        |:---------------------------------------- |:--------- |:------ |:------ |
+        | 49093a00f4850120d17fa9ef9cae3ff0f37cacfb | ✅ (0)     |        |        |
+        | """)
     end
 end
