@@ -6,20 +6,29 @@ using Git: Git
 using Markdown: Markdown
 
 bisect(path, code; kw...) = cd(()->bisect(code; kw...), path)
-function bisect(code; git = Git.git(), old, new=readchomp(`$git rev-parse HEAD`), julia=joinpath(Sys.BINDIR, "julia"), get_status=()->readchomp(`$git rev-parse HEAD`), print_result=true)
-    code = print_result ? "print(begin\n$code\nend)" : code
-    run(`$git stash`)
-    run(`$git bisect start`)
+function bisect(code;
+        git = Git.git(),
+        old,
+        new=readchomp(`$git rev-parse HEAD`),
+        julia=joinpath(Sys.BINDIR, "julia"),
+        get_status=()->readchomp(`$git rev-parse HEAD`),
+        auto_print=true,
+        verbose=false,
+        io=verbose ? () : (devnull, devnull, devnull))
+
+    code = auto_print ? "print(begin\n$code\nend)" : code
+    run(`$git stash`, io...)
+    run(`$git bisect start`, io...)
     try
         olds = Vector{Pair{String, Tuple{Int, String, String}}}()
         news = Vector{Pair{String, Tuple{Int, String, String}}}()
 
-        run(`$git checkout $new`)
+        run(`$git checkout $new`, io...)
         new_val = test(julia, code)
         push!(news, get_status()=>new_val)
-        run(`$git bisect new`)
+        run(`$git bisect new`, io...)
 
-        run(`$git checkout $old`)
+        run(`$git checkout $old`, io...)
         old_val = test(julia, code)
         push!(olds, get_status()=>old_val)
         status = match(r"([0-9a-f]{40}) is the first new commit", readchomp(`$git bisect old`))
@@ -50,8 +59,8 @@ function bisect(code; git = Git.git(), old, new=readchomp(`$git rev-parse HEAD`)
         end
         return (olds, reverse(news)), (compare_by_stdout, only(status)) # Bisect succeeded!
     finally
-        run(`$git bisect reset`)
-        run(`$git stash pop`)
+        run(`$git bisect reset`, io...)
+        run(`$git stash pop`, io...)
     end
 end
 
