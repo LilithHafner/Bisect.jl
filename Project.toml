@@ -3,6 +3,10 @@ uuid = "e5418a9d-0cef-4b26-bb53-14104f61bd75"
 authors = ["Lilith Orion Hafner <lilithhafner@gmail.com> and contributors"]
 version = "0.0.0"
 
+[deps]
+Git = "d7ba0133-e1db-5d97-8f8c-041e4b3a1eb2"
+Markdown = "d6f4376e-aef5-505a-96c1-9c027394607a"
+
 [compat]
 julia = "1"
 
