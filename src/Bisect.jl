@@ -7,7 +7,7 @@ using Markdown: Markdown
 
 bisect(args...; display_limit=60, kw...) = md(_bisect(args...; kw...); display_limit)
 
-_bisect(path, code; kw...) = cd(()->bisect(code; kw...), path)
+_bisect(path, code; kw...) = cd(()->_bisect(code; kw...), path)
 function _bisect(code;
         git = Git.git(),
         old,
@@ -19,7 +19,7 @@ function _bisect(code;
         io=verbose ? () : (devnull, devnull, devnull))
 
     code = auto_print ? "print(begin\n$code\nend)" : code
-    run(`$git stash`, io...)
+    run(ignorestatus(`$git stash`), io...)
     run(`$git bisect start`, io...)
     try
         olds = Vector{Pair{String, Tuple{Int, String, String}}}()
@@ -59,10 +59,10 @@ function _bisect(code;
             end
             status = match(r"([0-9a-f]{40}) is the first new commit", readchomp(`$git bisect $res`))
         end
-        return (olds, reverse(news)), (compare_by_stdout, only(status)) # Bisect succeeded!
+        return (olds, reverse(news)), (compare_by_stdout, status[1]) # Bisect succeeded!
     finally
         run(`$git bisect reset`, io...)
-        run(`$git stash pop`, io...)
+        run(ignorestatus(`$git stash pop`), io...)
     end
 end
 
@@ -80,7 +80,7 @@ function md(results; display_limit)
     header, compare_by_stdout = if final_result === nothing
         "❌ Bisect failed", nothing
     else
-        "✅ Bisect succeeded! The first new commit is $(final_result[2][1])", final_result[1]
+        "✅ Bisect succeeded! The first new commit is $(final_result[2])", final_result[1]
     end
 
     show_exitcode = any(!iszero∘first∘last, data)
