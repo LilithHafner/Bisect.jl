@@ -5,8 +5,10 @@ export bisect
 using Git: Git
 using Markdown: Markdown
 
-bisect(path, code; kw...) = cd(()->bisect(code; kw...), path)
-function bisect(code;
+bisect(args...; kw...) = md(_bisect(args...; kw...))
+
+_bisect(path, code; kw...) = cd(()->bisect(code; kw...), path)
+function _bisect(code;
         git = Git.git(),
         old,
         new=readchomp(`$git rev-parse HEAD`),
