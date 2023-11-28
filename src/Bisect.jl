@@ -5,7 +5,7 @@ export bisect
 using Git: Git
 using Markdown: Markdown
 
-bisect(args...; kw...) = md(_bisect(args...; kw...))
+bisect(args...; display_limit=60, kw...) = md(_bisect(args...; kw...); display_limit)
 
 _bisect(path, code; kw...) = cd(()->bisect(code; kw...), path)
 function _bisect(code;
@@ -74,7 +74,7 @@ function test(julia, code)
     p.exitcode, String(take!(out)), String(take!(err))
 end
 
-function md(results)
+function md(results; display_limit)
     (news, olds), final_result = results
     data = vcat(news, olds)
     header, compare_by_stdout = if final_result === nothing
@@ -92,7 +92,7 @@ function md(results)
 
     rows = Vector{Vector{Any}}()
     push!(rows, Any["Commit"])
-    trunc(s, len=50) = length(s) > len ? s[1:len-3] * "..." : s
+    trunc(s) = display_limit !== nothing && length(s) > display_limit ? s[1:display_limit-3] * "..." : s
     show_exitcode && push!(rows[end], (compare_by_stdout === false ? Markdown.Bold : identity)("Exit code"))
     show_stdout && push!(rows[end], (compare_by_stdout === true ? Markdown.Bold : identity)("stdout"))
     show_stderr && push!(rows[end], "stderr")
@@ -102,7 +102,7 @@ function md(results)
         show_stdout && push!(rows[end], trunc(stdout))
         show_stderr && push!(rows[end], trunc(stderr))
     end
-    if length(data) > 2
+    if final_result !== nothing
         bold_index = length(news)+2
         rows[bold_index] = map(Markdown.Bold, rows[bold_index])
     end
