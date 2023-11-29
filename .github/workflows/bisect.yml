@@ -11,12 +11,14 @@ on:
       old:
         # Friendly description to be shown in the UI instead of 'name'
         description: 'The old endpoint of the bisection'
+        default: '21443987ee59b3d9225b8d2f162c9f766b2c84a4'
         # Input has to be provided for the workflow to run
         required: true
         # The data type of the input
         type: string
       new:
         description: 'The new endpoint of the bisection'
+        default: 'HEAD'
         required: true
         type: string
       code:
@@ -43,6 +45,8 @@ jobs:
     - name: Hello world
       run: echo "Hello World"
     - name: Run bisetcion
-      run: julia --project -e 'import Pkg; Pkg.add(url="https://github.com/LilithHafner/Bisect.jl"); display(bisect("${{ inputs.code }}", old="${{ inputs.old }}", new="${{ inputs.new }}"))'
+      run: julia --project -e 'using Bisect; display(bisect("${{ inputs.code }}", old="${{ inputs.old }}", new="${{ inputs.new }}"))'
+      # Not installing the package because it is already installed on this repo.
+      #run: julia --project -e 'import Pkg; Pkg.add(url="https://github.com/LilithHafner/Bisect.jl"); using Bisect; display(bisect("${{ inputs.code }}", old="${{ inputs.old }}", new="${{ inputs.new }}"))'
     - name: Toodles
       run: echo "Toodles"
