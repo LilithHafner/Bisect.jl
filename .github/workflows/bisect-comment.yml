@@ -5,40 +5,35 @@ on:
     types: created
 
 jobs:
-  echo:
-    name: Echo important info
-    runs-on: ubuntu-latest
-    steps:
-      - run: |
-          echo A comment on item $NUMBER
-          echo Triggered by $ACTOR
-        env:
-          NUMBER: ${{ github.event.issue.number }}
-          ACTOR: ${{ github.actor }}
-
-  trusted:
+  bisect:
     # This job only runs for issue comments
     name: Execute trusted code
     if: github.actor == 'LilithHafner' && contains(github.event.comment.body, '`bisect()`')
     runs-on: ubuntu-latest
-    # This elevates the permissions of secrets.GITHUB_TOKEN, but only steps that 
-    # have that token can use those permissions. And the permissions should be 
-    # limited to working with issues and pull requests and such.
+    # This elevates the permissions of secrets.GITHUB_TOKEN. Only the 
+    # final step has that token and can use those permissions and the 
+    # permissions should be limited to working with issues and pull 
+    # requests and such. Still, this is vulnerable to arbitrary remote
+    # code execution (e.g. deleting all issues and pull requests) by 
+    # authorized actors. Be careful which actors you authorize.
     permissions:
       issues: write
       pull-requests: write
     steps:
-      - name: Echo
-        run: echo I trust $BODY
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: julia-actions/setup-julia@v1
+      - uses: julia-actions/cache@v1
+      - uses: julia-actions/julia-buildpkg@v1  
+      - name: Write to file
+        run: echo $BODY > BISECTION_FILE_LAMJGUDOQZGFSDQBKQUN
         env:
           BODY: ${{ github.event.comment.body }}
-      - name: Process input
-        id: compute
-        run: julia -e 'open(io -> print(io, "OUTPUT=",hash(ENV["BODY"])), ENV["GITHUB_ENV"], append=true)'
-        env:
-          BODY: ${{ github.event.comment.body }}
+      - name: Run bisection
+        run: julia --project -e 'using Bisect; Bisect.workflow("BISECTION_FILE_LAMJGUDOQZGFSDQBKQUN")'
       - name: Add comment
-        run: gh issue comment "$NUMBER" --body "Acknowledged. $OUTPUT"
+        run: gh issue comment "$NUMBER" --body-file BISECTION_FILE_LAMJGUDOQZGFSDQBKQUN
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GH_REPO: ${{ github.repository }}

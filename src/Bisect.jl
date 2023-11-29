@@ -116,10 +116,11 @@ end
 
 # For workflow usage
 function _workflow(comment; verbose=true)
+    verbose && println(repr(comment))
     out = Any[]
 
     names = ("code", "new", "old")
-    regexs = (r"```julia\n((.|\n)*?)\n```", r"`new\s?=\s?(\S+)`", r"`old\s?=\s?(\S+)`")
+    regexs = (r"```julia[\r\n]+((.|[\r\n])*?)[\r\n]+ ?```", r"`new\s?=\s?(\S+)`", r"`old\s?=\s?(\S+)`")
     values = getindex.(something.(match.(regexs, comment), ((nothing,),)), 1)
 
     for (name, re, val) in zip(names, regexs, values)
