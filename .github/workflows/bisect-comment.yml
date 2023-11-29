@@ -1,0 +1,45 @@
+name: Bisect on comment
+
+on: 
+  issue_comment:
+    types: created
+
+jobs:
+  echo:
+    name: Echo important info
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          echo A comment on item $NUMBER
+          echo Triggered by $ACTOR
+        env:
+          NUMBER: ${{ github.event.issue.number }}
+          ACTOR: ${{ github.actor }}
+
+  trusted:
+    # This job only runs for issue comments
+    name: Execute trusted code
+    if: github.actor == 'LilithHafner' && contains(github.event.comment.body, '`bisect()`')
+    runs-on: ubuntu-latest
+    # This elevates the permissions of secrets.GITHUB_TOKEN, but only steps that 
+    # have that token can use those permissions. And the permissions should be 
+    # limited to working with issues and pull requests and such.
+    permissions:
+      issues: write
+      pull-requests: write
+    steps:
+      - name: Echo
+        run: echo I trust $BODY
+        env:
+          BODY: ${{ github.event.comment.body }}
+      - name: Process input
+        id: compute
+        run: julia -e 'open(io -> print(io, "OUTPUT=",hash(ENV["BODY"])), ENV["GITHUB_ENV"], append=true)'
+        env:
+          BODY: ${{ github.event.comment.body }}
+      - name: Add comment
+        run: gh issue comment "$NUMBER" --body "Acknowledged. $OUTPUT"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          NUMBER: ${{ github.event.issue.number }}
