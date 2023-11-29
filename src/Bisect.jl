@@ -5,7 +5,9 @@ export bisect
 using Git: Git
 using Markdown: Markdown
 
-bisect(args...; display_limit=60, kw...) = md(_bisect(args...; kw...); display_limit)
+const DEFAULT_DISPLAY_LIMIT = 60
+
+bisect(args...; display_limit=DEFAULT_DISPLAY_LIMIT, kw...) = md(_bisect(args...; kw...); display_limit)
 
 _bisect(path, code; kw...) = cd(()->_bisect(code; kw...), path)
 function _bisect(code;
@@ -109,7 +111,44 @@ function md(results; display_limit)
 
     table = Markdown.Table(rows, fill(:l, only(unique(length.(rows)))))
 
-    Markdown.MD([Markdown.Paragraph(header), table])
+    Markdown.MD([Markdown.Header(header, 3), table])
+end
+
+# For workflow usage
+function _workflow(comment; verbose=true)
+    out = Any[]
+
+    names = ("code", "new", "old")
+    regexs = (r"```julia\n((.|\n)*?)\n```", r"`new\s?=\s?(\S+)`", r"`old\s?=\s?(\S+)`")
+    values = getindex.(something.(match.(regexs, comment), ((nothing,),)), 1)
+
+    for (name, re, val) in zip(names, regexs, values)
+        if val === nothing
+            if isempty(out)
+                push!(out, Markdown.Header("⚠️ Parse Error", 3))
+                push!(out, Markdown.List([]))
+            end
+            push!(out[end].items, Markdown.Paragraph(["Could not find $name (regex: ", Markdown.Code(re.pattern), ")"]))
+        end
+    end
+    isempty(out) || return Markdown.MD(out)
+
+    code, new, old = values
+    res = _bisect(code; new, old, verbose)
+
+    if verbose
+        full_md = md(res; display_limit=10_000)
+        display(full_md)
+    end
+
+    md(res; display_limit=DEFAULT_DISPLAY_LIMIT)
+end
+function workflow(path)
+    comment = read(path, String)
+    md = _workflow(comment)
+    open(path, "w") do io
+        print(io, md)
+    end
 end
 
 end
