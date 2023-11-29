@@ -42,11 +42,7 @@ jobs:
     - uses: julia-actions/setup-julia@v1
     - uses: julia-actions/cache@v1
     - uses: julia-actions/julia-buildpkg@v1  
-    - name: Hello world
-      run: echo "Hello World"
     - name: Run bisetcion
       run: julia --project -e 'using Bisect; display(bisect("${{ inputs.code }}", old="${{ inputs.old }}", new="${{ inputs.new }}"))'
       # Not installing the package because it is already installed on this repo.
       #run: julia --project -e 'import Pkg; Pkg.add(url="https://github.com/LilithHafner/Bisect.jl"); using Bisect; display(bisect("${{ inputs.code }}", old="${{ inputs.old }}", new="${{ inputs.new }}"))'
-    - name: Toodles
-      run: echo "Toodles"
