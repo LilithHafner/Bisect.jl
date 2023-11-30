@@ -5,56 +5,44 @@ on: pull_request
 jobs:
   bisect:
     # This job only runs for issue comments
-    name: Execute trusted code
-    #if: github.actor == 'LilithHafner' && contains(github.event.comment.body, '`bisect()`')
+    if: contains(github.event.comment.body, '`bisect()`')
     runs-on: ubuntu-latest
     # This elevates the permissions of secrets.GITHUB_TOKEN. Only the 
-    # final step has that token and can use those permissions and the 
-    # permissions should be limited to working with issues and pull 
-    # requests and such. Still, this is vulnerable to arbitrary remote
-    # code execution (e.g. deleting all issues and pull requests) by 
-    # authorized actors. Be careful which actors you authorize.
+    # "Check actor permissions" and "Add comment" steps have the token
+    # and can use those permissions. Hopefully, an uncredentialed
+    # commenter can't bypass or hack the Check actor permissions step
+    # if they can, or if an adversary already has write access to the 
+    # repo, then this workflow is vulnerable to arbitrary remote code
+    # execution with write access to `issues` and `pull-requests`
+    # (e.g. deleting all issues and pull requests).
     permissions:
       issues: write
       pull-requests: write
     steps:
-      #- uses: actions/checkout@v4
-      #  with:
-      #    fetch-depth: 0
-      #- uses: julia-actions/setup-julia@v1
-      #- uses: julia-actions/cache@v1
-      #- uses: julia-actions/julia-buildpkg@v1  
-      #- name: Write to file
-      #  run: echo $BODY > BISECTION_FILE_LAMJGUDOQZGFSDQBKQUN
-      #  env:
-      #    BODY: ${{ github.event.comment.body }}
-      #- name: Run bisection
-      #  run: julia --project -e 'using Bisect; Bisect.workflow("BISECTION_FILE_LAMJGUDOQZGFSDQBKQUN")'
-      #- name: Add comment
-      #  run: gh issue comment "$NUMBER" --body-file BISECTION_FILE_LAMJGUDOQZGFSDQBKQUN
-      #  env:
-      #    GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      #    GH_REPO: ${{ github.repository }}
-      #    NUMBER: ${{ github.event.issue.number }}
-      - name: dump
-        run: echo ${{ github }}
-      - name: check commenter permissions
+      - name: Check actor permissions
         run: >-
           PERMISSION=$(gh api -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" 
           /repos/$REPO/collaborators/$ACTOR/permission | jq .permission);
           [ $PERMISSION = "\"write\"" ] || [ $PERMISSION = "\"admin\"" ]
         env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           REPO: ${{ github.repository }}
           ACTOR: ${{ github.actor }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: check commenter permissions (fail)
-        run: >-
-          PERMISSION=$(gh api -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" 
-          /repos/$REPO/collaborators/$ACTOR/permission | jq .permission);
-          [ $PERMISSION = "\"write\"" ] || [ $PERMISSION = "\"addmin\"" ]
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: julia-actions/setup-julia@v1
+      - uses: julia-actions/cache@v1
+      - uses: julia-actions/julia-buildpkg@v1  
+      - name: Write to file
+        run: echo $BODY > BISECTION_FILE_LAMJGUDOQZGFSDQBKQUN
         env:
-          REPO: ${{ github.repository }}
-          ACTOR: ${{ github.actor }}
+          BODY: ${{ github.event.comment.body }}
+      - name: Run bisection
+        run: julia --project -e 'using Bisect; Bisect.workflow("BISECTION_FILE_LAMJGUDOQZGFSDQBKQUN")'
+      - name: Add comment
+        run: gh issue comment "$NUMBER" --body-file BISECTION_FILE_LAMJGUDOQZGFSDQBKQUN
+        env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: should not run
-        run: echo security hole
+          GH_REPO: ${{ github.repository }}
+          NUMBER: ${{ github.event.issue.number }}
