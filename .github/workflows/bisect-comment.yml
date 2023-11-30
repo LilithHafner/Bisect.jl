@@ -41,7 +41,7 @@ jobs:
         env:
           BODY: ${{ github.event.comment.body }}
       - name: Run bisection
-        run: julia --project -e 'using Bisect; Bisect.workflow("BISECTION_FILE_LAMJGUDOQZGFSDQBKQUN")'
+        run: julia -e 'import Pkg; Pkg.add(url="https://github.com/LilithHafner/Bisect.jl"); using Bisect; Bisect.workflow("BISECTION_FILE_LAMJGUDOQZGFSDQBKQUN")'
       - name: Add comment
         run: gh issue comment "$NUMBER" --body-file BISECTION_FILE_LAMJGUDOQZGFSDQBKQUN
         env:
