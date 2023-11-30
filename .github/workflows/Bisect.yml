@@ -1,4 +1,4 @@
-name: Bisect on comment
+name: Bisect Bot
 
 # This job only runs when folks create new issue (or pr) comments
 on:
