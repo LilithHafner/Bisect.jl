@@ -37,7 +37,7 @@ jobs:
       #    GH_REPO: ${{ github.repository }}
       #    NUMBER: ${{ github.event.issue.number }}
       - name: dump
-        run: echo {{ github }}
+        run: echo ${{ github }}
       - name: check commenter permissions
         run: >-
           PERMISSION=$(gh api -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" 
