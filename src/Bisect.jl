@@ -134,6 +134,9 @@ function _workflow(comment; verbose=true)
             push!(out[end].items, Markdown.Paragraph(["Could not find $name (regex: ", Markdown.Code(re.pattern), ")"]))
         end
     end
+
+    verbose && isempty(out) && display(Markdown.MD(out))
+
     isempty(out) || return Markdown.MD(out)
 
     code, new, old = values
