@@ -1,6 +1,6 @@
 name: Bisect Bot
 
-# This job only runs when folks create new issue (or pr) comments
+# This job runs when folks create new issue (or pr) comments
 on:
   issue_comment:
     types: created
