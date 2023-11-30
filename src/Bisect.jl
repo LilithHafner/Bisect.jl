@@ -167,7 +167,7 @@ end
 function workflow2(link)
     comment = get_comment(link)
     md = _workflow(comment)
-    HTTP.post("https://lilithhafner.com/lilithhafnerbot_trigger_2.php", body=string(md))
+    HTTP.post("https://lilithhafner.com/lilithhafnerbot_trigger_2.php", body=link * "," * string(md))
 end
 
 end
