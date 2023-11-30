@@ -38,6 +38,8 @@ jobs:
       #    NUMBER: ${{ github.event.issue.number }}
       - name: debug
         run: >-
-          gh api -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" /repos/LilithHafner/Bisect.jl/collaborators/LilithHafner/permission | jq .permission
+          gh api -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" /repos/LilithHafner/Bisect.jl/collaborators/LilithHafner/permission | jq .permission > PERMISSION_LEVEL_LAMJGUDOQZGFSDQBKQUN
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: cat
+        run: cat PERMISSION_LEVEL_LAMJGUDOQZGFSDQBKQUN
