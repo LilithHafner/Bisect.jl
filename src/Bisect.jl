@@ -159,9 +159,6 @@ end
 
 using JSON3, HTTP
 function get_comment(link)
-    # https://github.com/LilithHafner/Bisect.jl/pull/5#issuecomment-1834044633
-    # https://github.com/LilithHafner/Bisect.jl/pull/5#issuecomment-1833915675
-    # https://github.com/LilithHafner/Bisect.jl/issues/8#issue-2017841366 # TODO: this testcase is broken
     m = match(r"https://github.com/([\w\.\+\-]+)/([\w\.\+\-]+)/(pull|issues)/(\d+)#issue(comment)?-(\d+)", link)
     response = JSON3.read(`gh api -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" /repos/$(m[1])/$(m[2])/issues/comments/$(m[6])`)
     response["body"]
