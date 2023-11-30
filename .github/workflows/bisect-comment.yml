@@ -1,14 +1,12 @@
 name: Bisect on comment
 
-on: 
-  issue_comment:
-    types: created
+on: pull_request
 
 jobs:
   bisect:
     # This job only runs for issue comments
     name: Execute trusted code
-    if: github.actor == 'LilithHafner' && contains(github.event.comment.body, '`bisect()`')
+    #if: github.actor == 'LilithHafner' && contains(github.event.comment.body, '`bisect()`')
     runs-on: ubuntu-latest
     # This elevates the permissions of secrets.GITHUB_TOKEN. Only the 
     # final step has that token and can use those permissions and the 
@@ -20,21 +18,25 @@ jobs:
       issues: write
       pull-requests: write
     steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - uses: julia-actions/setup-julia@v1
-      - uses: julia-actions/cache@v1
-      - uses: julia-actions/julia-buildpkg@v1  
-      - name: Write to file
-        run: echo $BODY > BISECTION_FILE_LAMJGUDOQZGFSDQBKQUN
-        env:
-          BODY: ${{ github.event.comment.body }}
-      - name: Run bisection
-        run: julia --project -e 'using Bisect; Bisect.workflow("BISECTION_FILE_LAMJGUDOQZGFSDQBKQUN")'
-      - name: Add comment
-        run: gh issue comment "$NUMBER" --body-file BISECTION_FILE_LAMJGUDOQZGFSDQBKQUN
+      #- uses: actions/checkout@v4
+      #  with:
+      #    fetch-depth: 0
+      #- uses: julia-actions/setup-julia@v1
+      #- uses: julia-actions/cache@v1
+      #- uses: julia-actions/julia-buildpkg@v1  
+      #- name: Write to file
+      #  run: echo $BODY > BISECTION_FILE_LAMJGUDOQZGFSDQBKQUN
+      #  env:
+      #    BODY: ${{ github.event.comment.body }}
+      #- name: Run bisection
+      #  run: julia --project -e 'using Bisect; Bisect.workflow("BISECTION_FILE_LAMJGUDOQZGFSDQBKQUN")'
+      #- name: Add comment
+      #  run: gh issue comment "$NUMBER" --body-file BISECTION_FILE_LAMJGUDOQZGFSDQBKQUN
+      #  env:
+      #    GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #    GH_REPO: ${{ github.repository }}
+      #    NUMBER: ${{ github.event.issue.number }}
+      - name: debug
+        run: gh api -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" /repos/LilithHafner/Bisect.jl/collaborators/LilithHafner/permission | jq .permission
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GH_REPO: ${{ github.repository }}
-          NUMBER: ${{ github.event.issue.number }}
