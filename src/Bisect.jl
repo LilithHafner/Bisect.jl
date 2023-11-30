@@ -119,9 +119,11 @@ function _workflow(comment; verbose=true)
     verbose && println(repr(comment))
     out = Any[]
 
+    # TODO: test defaults
+    defaults = Tuple(((x == "" ? nothing : x), ) for x in ("", get(ENV, "DEFAULT_NEW", ""), get(ENV, "DEFAULT_OLD", "")))
     names = ("code", "new", "old")
     regexs = (r"```julia[\r\n]+((.|[\r\n])*?)[\r\n]+ ?```", r"`new\s?=\s?(\S+)`", r"`old\s?=\s?(\S+)`")
-    values = getindex.(something.(match.(regexs, comment), ((nothing,),)), 1)
+    values = getindex.(something.(match.(regexs, comment), defaults), 1)
 
     for (name, re, val) in zip(names, regexs, values)
         if val === nothing

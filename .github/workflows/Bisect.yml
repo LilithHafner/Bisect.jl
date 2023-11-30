@@ -16,4 +16,5 @@ jobs:
     steps:
       - uses: LilithHafner/bisect@main
         with:
+          default-old: 06051c5cf084fefc43b06bf2527960db6489a6ec
           github-token: ${{ secrets.GITHUB_TOKEN }}
