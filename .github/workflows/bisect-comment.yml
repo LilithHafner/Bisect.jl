@@ -1,6 +1,8 @@
 name: Bisect on comment
 
-on: pull_request
+on:
+  issue_comment:
+    types: create
 
 jobs:
   bisect:
