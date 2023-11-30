@@ -39,16 +39,22 @@ jobs:
       - name: check commenter permissions
         run: >-
           PERMISSION=$(gh api -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" 
-          /repos/LilithHafner/Bisect.jl/collaborators/LilithHafner/permission | jq .permission);
+          /repos/$ORD/$REPO/collaborators/$ACTOR/permission | jq .permission);
           [ $PERMISSION = "\"write\"" ] || [ $PERMISSION = "\"admin\"" ]
         env:
+          ORG: ${{ github.organization }}
+          REPO: ${{ github.repo }}
+          ACTOR: ${{ github.actor }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: check commenter permissions (fail)
         run: >-
           PERMISSION=$(gh api -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" 
-          /repos/LilithHafner/Bisect.jl/collaborators/LilithHafner/permission | jq .permission);
+          /repos/$ORD/$REPO/collaborators/$ACTOR/permission | jq .permission);
           [ $PERMISSION = "\"write\"" ] || [ $PERMISSION = "\"addmin\"" ]
         env:
+          ORG: ${{ github.organization }}
+          REPO: ${{ github.repo }}
+          ACTOR: ${{ github.actor }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: should not run
         run: echo security hole
