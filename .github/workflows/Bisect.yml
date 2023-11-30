@@ -14,6 +14,6 @@ jobs:
       issues: write
       pull-requests: write
     steps:
-      - uses: LilithHafner/bisect-action@cfa4b21d369e64cb24d3936b3ae4458ad42eb1a0
+      - uses: LilithHafner/bisect@v1
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
