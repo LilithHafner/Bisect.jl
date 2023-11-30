@@ -2,7 +2,7 @@ name: Bisect on comment
 
 on:
   issue_comment:
-    types: create
+    types: created
 
 jobs:
   bisect:
