@@ -135,7 +135,7 @@ function _workflow(comment; verbose=true)
         end
     end
 
-    verbose && isempty(out) && display(Markdown.MD(out))
+    verbose && !isempty(out) && display(Markdown.MD(out))
 
     isempty(out) || return Markdown.MD(out)
 
