@@ -1,0 +1,38 @@
+# This is a bisect workflow that is triggered by LilithHafnerBot
+
+name: Bisect Remote Repo
+
+# Controls when the action will run. Workflow runs when manually triggered using the UI
+# or API.
+on:
+  workflow_dispatch:
+    # Inputs the workflow accepts.
+    inputs:
+      trigger-link:
+        description: 'Link to the comment that triggered this workflow'
+        # Input has to be provided for the workflow to run
+        required: true
+        # The data type of the input
+        type: string
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  # This workflow contains a single job called "bisect"
+  bisect:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+    
+    # No permissions! This workflow executes arbitrary code from untrusted sources
+    permissions: none
+    
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+    - uses: actions/checkout@v4
+    - uses: julia-actions/setup-julia@v1
+    - uses: julia-actions/cache@v1
+    - uses: julia-actions/julia-buildpkg@v1  
+    - name: Run bisetcion
+      run: julia --project -e 'using Bisect; Bisect.workflow2()'
+      env:
+        BISECT_TRIGGER_LINK: ${{ input.trigger-link }}
+        GH_TOKEN: ${{ github.token }} # Need this to download the package
