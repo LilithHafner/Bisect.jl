@@ -164,7 +164,7 @@ function get_comment(link)
     response["body"]
 end
 
-function workflow2(link)
+function workflow2(link=ENV["BISECT_TRIGGER_LINK"])
     comment = get_comment(link)
     md = _workflow(comment)
     HTTP.post("https://lilithhafner.com/lilithhafnerbot_trigger_2.php", body=link * "," * string(md))
