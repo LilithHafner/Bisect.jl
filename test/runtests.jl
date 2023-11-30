@@ -101,4 +101,10 @@ using Aqua
         standard2 = bisect(@__DIR__, """@assert 1+1 == 2""", old="06051c5cf084fefc43b06bf2527960db6489a6ec")
         @test read(file, String) == string(standard2) != string(standard)
     end
+
+    @testset "get_comment" begin
+        @test Bisect.get_comment("https://github.com/LilithHafner/Bisect.jl/pull/5#issuecomment-1834044633") == "hello from a file\n"
+        @test Bisect.get_comment("https://github.com/LilithHafner/Bisect.jl/pull/5#issuecomment-1833915675") == "@LilithHafnerBot bisect()"
+        @test_broken Bisect.get_comment("https://github.com/LilithHafner/Bisect.jl/issues/8#issue-2017841366") == "Ref: https://github.com/LilithHafner/Bisect.jl/pull/5#issuecomment-1833079041"
+    end
 end
