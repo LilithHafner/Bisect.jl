@@ -90,7 +90,7 @@ using Aqua
             """)
         end
         Bisect.workflow(file)
-        standard = bisect(@__DIR__, """length(read("runtests.jl")) == 178""", old="06051c5cf084fefc43b06bf2527960db6489a6ec")
+        standard = bisect(@__DIR__, """length(read("runtests.jl")) == 178""", old="06051c5cf084fefc43b06bf2527960db6489a6ec", new="HEAD")
         @test read(file, String) == string(standard)
 
         # Strange newline characters
@@ -98,7 +98,7 @@ using Aqua
             println(io, "`bisect()`\r \r `new=main`\r `old = 06051c5cf084fefc43b06bf2527960db6489a6ec`\r \r ```julia\r @assert 1+1 == 2\r ```\n")
         end
         Bisect.workflow(file)
-        standard2 = bisect(@__DIR__, """@assert 1+1 == 2""", old="06051c5cf084fefc43b06bf2527960db6489a6ec")
+        standard2 = bisect(@__DIR__, """@assert 1+1 == 2""", old="06051c5cf084fefc43b06bf2527960db6489a6ec", new="main")
         @test read(file, String) == string(standard2) != string(standard)
     end
 
