@@ -34,5 +34,5 @@ jobs:
     - name: Run bisetcion
       run: julia --project -e 'using Bisect; Bisect.workflow2()'
       env:
-        BISECT_TRIGGER_LINK: ${{ input.trigger-link }}
+        BISECT_TRIGGER_LINK: ${{ inputs.trigger-link }}
         GH_TOKEN: ${{ github.token }} # Need this to download the package
