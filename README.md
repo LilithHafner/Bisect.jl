@@ -56,6 +56,24 @@ The code block must be a Julia code block, beginning with
 ```` ```julia ```` and ending with ```` ``` ````. The trigger and code block must be in
 the same comment.
 
+### Default values for `old` and `new`
+
+The default value for `new` is "HEAD", which for issues, points to the head of hhe default
+branch and for pull requests, points to the head of the pull request branch (even if that
+pull request is from a fork!)
+
+The default value for `old` is more complicated. We attempts to find the oldest release on
+the current breaking version (e.g. "v1.0.0"). The exact details are subject to change, but the current
+implementation is
+
+- Filter down to tags that can be parsed by `VersionString`
+- If possible, filter out any tags that have a prerelease or build component
+- If there's any tag with a nonzero major version, keep only tags with the highest major version
+  and otherwise keep only tags with the highest minor version
+- Of the remaining tags, take the earliest according to symbolic version comparison breaking
+  ties lexicographically (e.g. if your repo has both a 1.0.0 tag and a v1.0.0 tag, this will
+  prefer 1.0.0)
+
 ## Security
 
 TODO (the documentation, that is. The security is already in place.)
