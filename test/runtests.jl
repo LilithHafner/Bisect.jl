@@ -11,10 +11,10 @@ using Aqua
         @test startswith(string(bisect(@__DIR__, """length(read("runtests.jl"))""", old="49093a00f4850120d17fa9ef9cae3ff0f37cacfb")), """
         ### ✅ Bisect succeeded! The first new commit is 06051c5cf084fefc43b06bf2527960db6489a6ec
 
-        | Commit                                       | **Exit code** | stdout  | stderr                                                       |
-        |:-------------------------------------------- |:------------- |:------- |:------------------------------------------------------------ |
-        | 49093a00f4850120d17fa9ef9cae3ff0f37cacfb     | ❌ (1)         |         | ERROR: SystemError: opening file \"runtests.jl\": No such f... |
-        | **06051c5cf084fefc43b06bf2527960db6489a6ec** | **✅ (0)**     | **178** | ****                                                         |
+        | Commit                                       | **Exit code** | stdout  | stderr                                                                                           |
+        |:-------------------------------------------- |:------------- |:------- |:------------------------------------------------------------------------------------------------ |
+        | 49093a00f4850120d17fa9ef9cae3ff0f37cacfb     | ❌ (1)         |         | ERROR: SystemError: opening file \"runtests.jl\": No such file or directory⏎Stacktrace:⏎ [1] sy... |
+        | **06051c5cf084fefc43b06bf2527960db6489a6ec** | **✅ (0)**     | **178** | ****                                                                                             |
         """)
 
         res = bisect(@__DIR__, """length(read("runtests.jl")) == 178""", old="06051c5cf084fefc43b06bf2527960db6489a6ec")
@@ -42,9 +42,9 @@ using Aqua
         @test startswith(string(bisect(@__DIR__, "@assert 1+1 == 3", old="49093a00f4850120d17fa9ef9cae3ff0f37cacfb")), """
         ### ❌ Bisect failed
 
-        | Commit                                   | Exit code | stderr                                                   |
-        |:---------------------------------------- |:--------- |:-------------------------------------------------------- |
-        | 49093a00f4850120d17fa9ef9cae3ff0f37cacfb | ❌ (1)     | ERROR: AssertionError: 1 + 1 == 3⏎Stacktrace:⏎ [1] to... |
+        | Commit                                   | Exit code | stderr                                                                          |
+        |:---------------------------------------- |:--------- |:------------------------------------------------------------------------------- |
+        | 49093a00f4850120d17fa9ef9cae3ff0f37cacfb | ❌ (1)     | ERROR: AssertionError: 1 + 1 == 3⏎Stacktrace:⏎ [1] top-level scope⏎   @ none:2⏎ |
         | """)
 
         @test startswith(string(bisect(@__DIR__, "rand()", old="49093a00f4850120d17fa9ef9cae3ff0f37cacfb")), "### ❌ Bisect failed\n\n|")

@@ -5,7 +5,7 @@ export bisect
 using Git: Git
 using Markdown: Markdown
 
-const DEFAULT_DISPLAY_LIMIT = 60
+const DEFAULT_DISPLAY_LIMIT = 100
 
 bisect(args...; display_limit=DEFAULT_DISPLAY_LIMIT, kw...) = md(_bisect(args...; kw...); display_limit)
 
