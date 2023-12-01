@@ -134,7 +134,9 @@ using Markdown
 
         Let's `bisect()` this
 
-        `@LilithHafnerBot bisect(old=06051c5cf084fefc43b06bf2527960db6489a6ec)`
+        @LilithHafnerBot
+
+         bisect(old=06051c5cf084fefc43b06bf2527960db6489a6ec)
 
         ```julia
         length(read("runtests.jl")) == 178
