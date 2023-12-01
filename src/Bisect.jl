@@ -225,7 +225,7 @@ function parse_args(args)
     allowed_keys = ("new", "old")
     allowed_keys_str = "\"" * join(allowed_keys, "\", \"", "\", and \"") * "\""
     err = Any[]
-    for arg in eachsplit(args, ',')
+    for arg in split(args, ',')
         kv = split(arg, '=')
         st_arg = strip(arg)
         if length(kv) > 2
