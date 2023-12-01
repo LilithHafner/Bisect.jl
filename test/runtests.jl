@@ -145,7 +145,7 @@ using Markdown
         @test occursin("Bisect succeeded", string(workflow))
 
         # Strange newline characters
-        comment = "`@LilithHafnerBot bisect(old=06051c5cf084fefc43b06bf2527960db6489a6ec)`\r \r `new=main`\r `old = 06051c5cf084fefc43b06bf2527960db6489a6ec`\r \r ```julia\r @assert 1+1 == 2\r ```\n"
+        comment = "`@LilithHafnerBot bisect(new=main, old=06051c5cf084fefc43b06bf2527960db6489a6ec)`\r \r `new=main`\r `old = 06051c5cf084fefc43b06bf2527960db6489a6ec`\r \r ```julia\r @assert 1+1 == 2\r ```\n"
         workflow2 = Bisect._workflow("no link", comment, @__DIR__, verbose=false)
         standard2 = bisect(@__DIR__, """@assert 1+1 == 2""", old="06051c5cf084fefc43b06bf2527960db6489a6ec", new="main")
         @test workflow2 == standard2
