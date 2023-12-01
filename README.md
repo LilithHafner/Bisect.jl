@@ -74,6 +74,8 @@ implementation is
   ties lexicographically (e.g. if your repo has both a 1.0.0 tag and a v1.0.0 tag, this will
   prefer 1.0.0)
 
+If no tags are found, the default value for `old` is the oldest commit with no parents.
+
 ## Security
 
 TODO (the documentation, that is. The security is already in place.)
