@@ -334,13 +334,6 @@ function populate_default_args!(args::Dict)
     end
 end
 
-using JSON3, HTTP
-function get_comment(link)
-    m = match(r"https://github.com/([\w\.\+\-]+)/([\w\.\+\-]+)/(pull|issues)/(\d+)#issue(comment)?-(\d+)", link)
-    response = JSON3.read(`gh api -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" /repos/$(m[1])/$(m[2])/issues/comments/$(m[6])`)
-    response["body"]
-end
-
 function _workflow(link, comment, path; verbose=true)
     verbose && println(link)
     verbose && println(repr(comment))
@@ -368,6 +361,13 @@ function _workflow(link, comment, path; verbose=true)
     verbose && display(md(res; display_limit=10_000))
 
     md(res; display_limit=DEFAULT_DISPLAY_LIMIT)
+end
+
+using JSON3, HTTP
+function get_comment(link) # TODO: this is unused
+    m = match(r"https://github.com/([\w\.\+\-]+)/([\w\.\+\-]+)/(pull|issues)/(\d+)#issue(comment)?-(\d+)", link)
+    response = JSON3.read(`gh api -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" /repos/$(m[1])/$(m[2])/issues/comments/$(m[6])`)
+    response["body"]
 end
 
 function workflow(link=ENV["BISECT_TRIGGER_LINK"])
