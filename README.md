@@ -84,3 +84,7 @@ TODO (the documentation, that is. The security is already in place.)
 
 This service runs on free github action runners. It's trivial to DOS this service,
 please don't do that intentionally.
+
+### Reporting vulnerabilities
+
+Please report security vulnerabilities to LilithHafner@gmail.com
