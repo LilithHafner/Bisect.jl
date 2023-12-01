@@ -301,7 +301,7 @@ function populate_default_args!(args::Dict)
     get!(default_new, args, "new")
 
     # TODO make this more robustly stateless
-    io = devnull, devnull, devnull
+    io = ()#devnull, devnull, devnull
     old = args["old"]
     new = args["new"]
 
@@ -310,6 +310,7 @@ function populate_default_args!(args::Dict)
     before = readchomp(`git rev-parse HEAD`)
     println("Before 1: $before")
     old_succeeds = success(`git checkout $old`)
+    println("Old succeeds: $old_succeeds")
     after = readchomp(`git rev-parse HEAD`)
     println("After 1: $after")
     before == after || run(`git switch -`, io...)
@@ -317,6 +318,7 @@ function populate_default_args!(args::Dict)
     before2 = readchomp(`git rev-parse HEAD`)
     println("Before 2: $before2")
     new_succeeds = success(`git checkout $new`)
+    println("New succeeds: $new_succeeds")
     after = readchomp(`git rev-parse HEAD`)
     println("After 2: $after")
     before == after || run(`git switch -`, io...)
