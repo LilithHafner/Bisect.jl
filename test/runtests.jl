@@ -42,12 +42,10 @@ using Aqua
         @test startswith(string(bisect(@__DIR__, "@assert 1+1 == 3", old="49093a00f4850120d17fa9ef9cae3ff0f37cacfb")), """
         ### ❌ Bisect failed
 
-        | Commit                                   | Exit code | stderr                                                       |
-        |:---------------------------------------- |:--------- |:------------------------------------------------------------ |
-        | 49093a00f4850120d17fa9ef9cae3ff0f37cacfb | ❌ (1)     | ERROR: AssertionError: 1 + 1 == 3
-        Stacktrace:
-         [1] top-le... |
-        | """) # TODO: handle newlines in stdout/stderr.
+        | Commit                                   | Exit code | stderr                                                   |
+        |:---------------------------------------- |:--------- |:-------------------------------------------------------- |
+        | 49093a00f4850120d17fa9ef9cae3ff0f37cacfb | ❌ (1)     | ERROR: AssertionError: 1 + 1 == 3⏎Stacktrace:⏎ [1] to... |
+        | """)
 
         @test startswith(string(bisect(@__DIR__, "rand()", old="49093a00f4850120d17fa9ef9cae3ff0f37cacfb")), "### ❌ Bisect failed\n\n|")
 

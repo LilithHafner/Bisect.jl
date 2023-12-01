@@ -94,7 +94,10 @@ function md(results; display_limit)
 
     rows = Vector{Vector{Any}}()
     push!(rows, Any["Commit"])
-    trunc(s) = display_limit !== nothing && length(s) > display_limit ? s[1:display_limit-3] * "..." : s
+    function trunc(s)
+        s2 = replace(s, "\n" => "⏎")
+        display_limit !== nothing && length(s2) > display_limit ? s2[1:display_limit-3] * "..." : s2
+    end
     show_exitcode && push!(rows[end], (compare_by_stdout === false ? Markdown.Bold : identity)("Exit code"))
     show_stdout && push!(rows[end], (compare_by_stdout === true ? Markdown.Bold : identity)("stdout"))
     show_stderr && push!(rows[end], "stderr")
