@@ -176,7 +176,7 @@ function workflow2(link=ENV["BISECT_TRIGGER_LINK"])
     path = joinpath(dir, bare_name)
     run(`git clone https://github.com/$(m[1])/$(m[2]) $path`)
     md = _workflow(comment, path)
-    HTTP.post("https://lilithhafner.com/lilithhafnerbot/trigger_2.php", body=link * "," * ENV["OPEN_SECRET"] * "," * string(md))
+    HTTP.post("https://lilithhafner.com/lilithhafnerbot/trigger_2.php", body=ENV["BISECT_AUTH"] * "," * link * "," * string(md))
 end
 
 end
