@@ -313,7 +313,7 @@ function populate_default_args!(args::Dict)
     println("Old succeeds: $old_succeeds")
     after = readchomp(`git rev-parse HEAD`)
     println("After 1: $after")
-    before == after || run(`git switch -`, io...)
+    before == after || run(`git switch - --detach`, io...)
 
     before2 = readchomp(`git rev-parse HEAD`)
     println("Before 2: $before2")
@@ -321,7 +321,7 @@ function populate_default_args!(args::Dict)
     println("New succeeds: $new_succeeds")
     after = readchomp(`git rev-parse HEAD`)
     println("After 2: $after")
-    before == after || run(`git switch -`, io...)
+    before == after || run(`git switch - --detach`, io...)
 
     run(ignorestatus(`git stash pop`), io...)
 
