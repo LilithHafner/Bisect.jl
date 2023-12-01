@@ -3,7 +3,7 @@ module Bisect
 export bisect
 
 using Git: Git
-using Markdown: Markdown
+using Markdown: Markdown, @md_str
 
 const DEFAULT_DISPLAY_LIMIT = 100
 
@@ -117,46 +117,213 @@ function md(results; display_limit)
     Markdown.MD([Markdown.Header(header, 3), table])
 end
 
-# For workflow usage
-function _workflow(comment, path...; verbose=true)
-    verbose && println(repr(comment))
-    out = Any[]
 
-    # TODO: test defaults
-    defaults = Tuple(((x == "" ? nothing : x), ) for x in ("", get(ENV, "DEFAULT_NEW", ""), get(ENV, "DEFAULT_OLD", "")))
-    names = ("code", "new", "old")
-    regexs = (r"```julia[\r\n]+((.|[\r\n])*?)[\r\n]+ ?```", r"`new\s?=\s?(\S+)`", r"`old\s?=\s?(\S+)`")
-    values = getindex.(something.(match.(regexs, comment), defaults), 1)
+# Workflow support
 
-    for (name, re, val) in zip(names, regexs, values)
-        if val === nothing
-            if isempty(out)
-                push!(out, Markdown.Header("⚠️ Parse Error", 3))
-                push!(out, Markdown.List([]))
-            end
-            push!(out[end].items, Markdown.Paragraph(["Could not find $name (regex: ", Markdown.Code(re.pattern), ")"]))
+"""
+    parse_comment(comment::AbstractString)
+
+parse a comment into either `(args::String, code::String)` or an error message `err::Markdown.MD`.
+"""
+function parse_comment(comment::AbstractString)
+    watch_phrase = "@LilithHafnerBot bisect"
+    occursin(watch_phrase, comment) || return md"""
+    ### ❗ Internal Error
+
+    Could not find `@LilithHafnerBot bisect`
+    """
+
+    trigger = match(r"@LilithHafnerBot bisect\((.*?)\)", comment)
+    code = match(r"```julia[\r\n]+((.|[\r\n])*?)[\r\n]+ ?```", comment)
+
+    trigger === nothing && code === nothing && return md"""
+    ### ⚠️ Parse Error
+
+    Invocation syntax is `@LilithHafnerBot bisect(<args>)` or `@LilithHafnerBot bisect()`
+    followed by a block of julia code in a fenced code block like this
+
+    ````
+    ```julia
+    @assert true
+    ```
+    ````
+
+    I found `@LilithHafnerBot bisect` but need parentheses and a code block to proceed.
+    """
+
+    trigger === nothing && return md"""
+    ### ⚠️ Parse Error
+
+    Invocation trigger syntax is `@LilithHafnerBot bisect(<args>)` or
+    `@LilithHafnerBot bisect()`. I found `@LilithHafnerBot bisect` but need a
+    (possibly empty) parenthesized argument list to proceed.
+    """
+
+    if code === nothing
+        alt = match(r"```(.*)[\r\n]+(.|[\r\n])*?[\r\n]+ ?```", comment)
+        return if alt === nothing
+            md"""
+            ### ⚠️ Parse Error
+
+            I found `@LilithHafnerBot bisect(<args>)` but need a code block to proceed.
+            Provide one like this
+
+            ````
+            ```julia
+            @assert true
+            ```
+            ````
+            """
+        elseif isempty(alt[1])
+            md"""
+            ### ⚠️ Parse Error
+
+            I found `@LilithHafnerBot bisect(<args>)` and a code block, but the code block
+            was not tagged. Please provide a julia code block like this:
+
+            ````
+            ```julia
+            @assert true
+            ```
+            ````
+
+            (note the "julia" tag after the first set of backticks)
+            """
+        else
+            out = md"""
+            ### ⚠️ Parse Error
+
+            I found `@LilithHafnerBot bisect(<args>)` and a code block, but the code block
+            was not tagged with "REPLACEME", not "julia". I can currently only handle julia
+            code.
+            """
+            # Incorrectly typeset the Julia language as julia because the tag must be lowercase.
+            out.content[2].content[3] = replace(out.content[2].content[3], "REPLACEME" => alt[1])
+            out
         end
     end
 
-    verbose && !isempty(out) && display(Markdown.MD(out))
+    (trigger[1], code[1])
+end
 
-    isempty(out) || return Markdown.MD(out)
+"""
+    parse_args(args::AbstractString)
 
-    code, new, old = values
-    res = _bisect(path..., code; new, old, verbose)
+parse a string of arguments into a dictionary of key-value pairs or an error message `err::Markdown.MD`.
+"""
+function parse_args(args)
+    args == "<args>" && return md"""
+    ### ⚠️ Parse Error
 
-    if verbose
-        full_md = md(res; display_limit=10_000)
-        display(full_md)
+    It looks like you kept the placeholder "<args>" in `@LilithHafnerBot bisect(<args>)`.
+    You should replace "<args>" with the actual arguments (or the empty string) like this
+    `@LilithHafnerBot bisect()` or `@LilithHafnerBot bisect(old=v1.6.0)`
+    """
+
+    out = Dict{String, String}()
+    isempty(strip(args)) && return out
+    allowed_keys = ("new", "old")
+    allowed_keys_str = "\"" * join(allowed_keys, "\", \"", "\", and \"") * "\""
+    err = Any[]
+    for arg in eachsplit(args, ',')
+        kv = split(arg, '=')
+        st_arg = strip(arg)
+        if length(kv) > 2
+            push!(err, Markdown.Paragraph("Argument \"$st_arg\" has multiple \"=\" signs"))
+        elseif length(kv) == 1
+            push!(err, Markdown.Paragraph("Argument \"$st_arg\" has no \"=\" sign"))
+        elseif length(kv) == 2
+            k, v = strip.(kv)
+            k in allowed_keys || push!(err, Markdown.Paragraph("\"$k\" is not a valid key (valid keys are $allowed_keys_str)"))
+            haskey(out, k) && push!(err, Markdown.Paragraph("Duplicate key \"$k\""))
+            out[k] = v
+        else
+            push!(err, Markdown.Paragraph("Argument \"$st_arg\" caused an internal error"))
+        end
     end
 
-    md(res; display_limit=DEFAULT_DISPLAY_LIMIT)
+    if !isempty(err)
+        pushfirst!(err, Markdown.Header("⚠️ Parse Error", 3))
+        return Markdown.MD(err)
+    end
+
+    out
 end
-function workflow(path)
-    comment = read(path, String)
-    md = _workflow(comment)
-    open(path, "w") do io
-        print(io, md)
+
+"""
+    maybe_checkcout_pr!(link)
+
+If the link is to a PR comment, check out that pr.
+"""
+function maybe_checkcout_pr!(link)
+    m = match(r"https://github.com/([\w\.\+\-]+)/([\w\.\+\-]+)/(pull|issues)/(\d+)#issue(comment)?-(\d+)", link)
+    m === nothing && return
+    m[3] == "pull" || return
+    run(`hr pr checkout $(m[4])`)
+end
+
+default_new() = "HEAD"
+
+function get_tags()
+    tags = Tuple{VersionNumber, String}[]
+    for tag in eachline(`git tag`)
+        version = try
+            VersionNumber(tag)
+        catch
+            nothing
+        end
+        version !== nothing && push!(tags, (version, tag))
+    end
+    tags
+end
+function get_first_commit()
+    commits = readlines(`git rev-list --max-parents=0 HEAD`)
+    times = map(hash -> readchomp(`git show -s --format=%ct $hash`), commits)
+    commits[argmin(times)]
+end
+function default_old() # TODO: test this more thoroughly
+    tags = get_tags()
+    isempty(tags) && return get_first_commit()
+    any(x -> isempty(x[1].build), tags) && filter!(x -> isempty(x[1].build), tags) # Prefer no build data
+    any(x -> isempty(x[1].prerelease), tags) && filter!(x -> isempty(x[1].prerelease), tags) # Prefer full release
+    if all(x -> iszero(x[1].major), tags)
+        latest_minor = maximum(x -> x[1].minor, tags)
+        filter!(x -> x[1].minor == latest_minor, tags)
+    else
+        latest_major = maximum(x -> x[1].major, tags)
+        filter!(x -> x[1].major == latest_major, tags)
+    end
+    minimum(tags)[2]
+end
+
+function populate_default_args!(args::Dict)
+    get!(default_old, args, "old")
+    get!(default_new, args, "new")
+
+    # TODO make this more robustly stateless
+    io = devnull, devnull, devnull
+    old = args["old"]
+    new = args["new"]
+
+    run(ignorestatus(`git stash`), io...)
+
+    before = readchomp(`git rev-parse HEAD`)
+    old_succeeds = success(`git checkout $old`)
+    after = readchomp(`git rev-parse HEAD`)
+    before == after || run(`git switch -`, io...)
+
+    new_succeeds = success(`git checkout $new`)
+    after = readchomp(`git rev-parse HEAD`)
+    before == after || run(`git switch -`, io...)
+
+    run(ignorestatus(`git stash pop`), io...)
+
+    if !old_succeeds || !new_succeeds
+        refs = old_succeeds ? " \"$new" : new_succeeds ? " \"$old" : "s \"$old\" or \"$new"
+        Markdown.MD([
+            Markdown.Header("⚠️ Parse Error", 3),
+            Markdown.Paragraph("I don't understand the ref$(refs)\"."),
+            Markdown.Paragraph(old_succeeds || new_succeeds ? "`git checkout $(old_succeeds ? new : old)` failed." : "Both `git checkout $old` and `git checkout $new` failed.")])
     end
 end
 
@@ -167,7 +334,36 @@ function get_comment(link)
     response["body"]
 end
 
-function workflow2(link=ENV["BISECT_TRIGGER_LINK"])
+function _workflow(link, comment, path; verbose=true)
+    verbose && println(link)
+    verbose && println(repr(comment))
+
+    args_str_code = parse_comment(comment)
+    args_str_code isa Markdown.MD && (verbose && display(args_str_code); return args_str_code)
+    args_str, code = args_str_code
+
+    args = parse_args(args_str)
+    args isa Markdown.MD && (verbose && display(args); return args)
+
+    res = cd(path) do
+        maybe_checkcout_pr!(link)
+
+        err = populate_default_args!(args)
+        err isa Markdown.MD && return err
+
+        verbose && println(args)
+
+        _bisect(code; new=args["new"], old=args["old"], verbose)
+    end
+
+    res isa Markdown.MD && (verbose && display(res); return res)
+
+    verbose && display(md(res; display_limit=10_000))
+
+    md(res; display_limit=DEFAULT_DISPLAY_LIMIT)
+end
+
+function workflow(link=ENV["BISECT_TRIGGER_LINK"])
     m = match(r"https://github.com/([\w\.\+\-]+)/([\w\.\+\-]+)/(pull|issues)/(\d+)#issue(comment)?-(\d+)", link)
     response = JSON3.read(`gh api -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" /repos/$(m[1])/$(m[2])/issues/comments/$(m[6])`)
     comment = response["body"]
@@ -175,7 +371,7 @@ function workflow2(link=ENV["BISECT_TRIGGER_LINK"])
     bare_name = endswith(m[2], ".jl") ? m[2][begin:end-3] : m[2]
     path = joinpath(dir, bare_name)
     run(`git clone https://github.com/$(m[1])/$(m[2]) $path`)
-    md = _workflow(comment, path)
+    md = _workflow(link, comment, path)
     HTTP.post("https://lilithhafner.com/lilithhafnerbot/trigger_2.php", body=ENV["BISECT_AUTH"] * "," * link * "," * string(md))
 end
 

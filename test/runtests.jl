@@ -1,6 +1,7 @@
 using Bisect
 using Test
 using Aqua
+using Markdown
 
 @testset "Bisect.jl" begin
     @testset "Code quality (Aqua.jl)" begin
@@ -59,50 +60,189 @@ using Aqua
     end
 
     @testset "Workflow error messages" begin
-        @test string(Bisect._workflow("""
+        @test string(Bisect._workflow("link", """
         `new = main`
         `old = deadbeef`
         ```julla
         1+1 == 2
         ```
-        """)) == """
+        """, @__DIR__, verbose=false)) == """
+        ### ❗ Internal Error
+
+        Could not find `@LilithHafnerBot bisect`
+        """
+
+        @test string(Bisect._workflow("link", """
+        @LilithHafnerBot bisect(new = main, old = deadbeef)
+
+        ```julla
+        1+1 == 2
+        ```
+        """, @__DIR__, verbose=false)) == """
         ### ⚠️ Parse Error
 
-          * Could not find code (regex: ````` ```julia[\\r\\n]+((.|[\\r\\n])*?)[\\r\\n]+ ?``` `````)
+        I found `@LilithHafnerBot bisect(<args>)` and a code block, but the code block was not tagged with "julla", not "julia". I can currently only handle julia code.
+        """
+
+        @test string(Bisect._workflow("link", """
+        @LilithHafnerBot bisect(new = main, old = deadbeef)
+
+        ```julia
+        1+1 == 2
+        ```
+        """, @__DIR__, verbose=false)) == """
+        ### ⚠️ Parse Error
+
+        I don't understand the ref "deadbeef".
+
+        `git checkout deadbeef` failed.
+        """
+
+        @test string(Bisect._workflow("link", """
+        @LilithHafnerBot bisect(old=livebeef, new = deadbeef)
+
+        ```julia
+        1+1 == 2
+        ```
+        """, @__DIR__, verbose=false)) == """### ⚠️ Parse Error
+
+        I don't understand the refs "livebeef" or "deadbeef".
+
+        Both `git checkout livebeef` and `git checkout deadbeef` failed.
         """
     end
 
     @testset "Workflow usage produces the same results and standard usage" begin
         file = tempname()
-        open(file, "w") do io
-            println(io, """
+        default_old = Bisect.default_old()
+        default_new = Bisect.default_new()
+        @test default_new == "HEAD"
+        @test default_old isa String
+
+        comment = """
 
             Let's `bisect()` this
 
-            `old = 06051c5cf084fefc43b06bf2527960db6489a6ec`
-            `new = HEAD`
+            `@LilithHafnerBot bisect(old=06051c5cf084fefc43b06bf2527960db6489a6ec)`
 
             ```julia
             length(read("runtests.jl")) == 178
             ```
-            """)
-        end
-        Bisect.workflow(file)
+            """
+        link = "ho link"
+        workflow = Bisect._workflow("no link",  """
+
+        Let's `bisect()` this
+
+        `@LilithHafnerBot bisect(old=06051c5cf084fefc43b06bf2527960db6489a6ec)`
+
+        ```julia
+        length(read("runtests.jl")) == 178
+        ```
+        """, @__DIR__, verbose=false)
         standard = bisect(@__DIR__, """length(read("runtests.jl")) == 178""", old="06051c5cf084fefc43b06bf2527960db6489a6ec", new="HEAD")
-        @test read(file, String) == string(standard)
+        @test workflow == standard
+        @test occursin("Bisect succeeded", string(workflow))
 
         # Strange newline characters
-        open(file, "w") do io
-            println(io, "`bisect()`\r \r `new=main`\r `old = 06051c5cf084fefc43b06bf2527960db6489a6ec`\r \r ```julia\r @assert 1+1 == 2\r ```\n")
-        end
-        Bisect.workflow(file)
+        comment = "`@LilithHafnerBot bisect(old=06051c5cf084fefc43b06bf2527960db6489a6ec)`\r \r `new=main`\r `old = 06051c5cf084fefc43b06bf2527960db6489a6ec`\r \r ```julia\r @assert 1+1 == 2\r ```\n"
+        workflow2 = Bisect._workflow("no link", comment, @__DIR__, verbose=false)
         standard2 = bisect(@__DIR__, """@assert 1+1 == 2""", old="06051c5cf084fefc43b06bf2527960db6489a6ec", new="main")
-        @test read(file, String) == string(standard2) != string(standard)
+        @test workflow2 == standard2
+        @test occursin("Bisect failed", string(workflow2))
     end
 
     @testset "get_comment" begin
         @test Bisect.get_comment("https://github.com/LilithHafner/Bisect.jl/pull/5#issuecomment-1834044633") == "hello from a file\n"
         @test Bisect.get_comment("https://github.com/LilithHafner/Bisect.jl/pull/5#issuecomment-1833915675") == "@LilithHafnerBot bisect()"
         @test_broken Bisect.get_comment("https://github.com/LilithHafner/Bisect.jl/issues/8#issue-2017841366") == "Ref: https://github.com/LilithHafner/Bisect.jl/pull/5#issuecomment-1833079041"
+    end
+
+    @testset "parse_comment parse errors" begin
+        @test Bisect.parse_comment("Hi!") isa Markdown.MD
+        @test Bisect.parse_comment("""
+            @LilithHafnerBot bisect
+            """) isa Markdown.MD
+        @test Bisect.parse_comment("""
+            @LilithHafnerBot bisect()
+            """) isa Markdown.MD
+        @test Bisect.parse_comment("""
+            @LilithHafnerBot bisect(<args>)
+
+            ```Julia
+            code
+            ```
+            """) isa Markdown.MD
+        @test Bisect.parse_comment("""
+            @LilithHafnerBot bisect(<args>)
+
+            ```
+            code
+            ```
+            """) isa Markdown.MD
+        @test Bisect.parse_comment("""
+            @LilithHafnerBot bisect
+
+            ```julia
+            code
+            ```
+            """) isa Markdown.MD
+    end
+
+    @testset "parse_comment success" begin
+        @test Bisect.parse_comment("""
+            @LilithHafnerBot bisect(<args>)
+
+            ```julia
+            code
+            ```
+            """) == ("<args>", "code")
+
+        @test Bisect.parse_comment("""
+            ```julia
+            codddeee
+            ```
+
+            @LilithHafnerBot bisect(new=1 old = 2)
+            """) == ("new=1 old = 2", "codddeee")
+
+
+        @test Bisect.parse_comment("""
+            ```julia
+            # Yes, even here: @LilithHafnerBot bisect()
+            codddeee
+            ```
+
+            Though I still need to notify @LilithHafnerBot
+            """) == ("", "# Yes, even here: @LilithHafnerBot bisect()\ncodddeee")
+
+        @test Bisect.parse_comment("""
+            ````julia
+            @assert 1+1 == 2
+            ```` @LilithHafnerBot bisect()
+            """) == ("", "@assert 1+1 == 2")
+    end
+
+    @testset "parse_args errors" begin
+        @test occursin("has no \"=\" sign", string(Bisect.parse_args("new")::Markdown.MD))
+        @test occursin("multiple \"=\" signs", string(Bisect.parse_args("n=e=w")::Markdown.MD))
+        @test occursin("multiple \"=\" signs", string(Bisect.parse_args("new = 1 old = 2")::Markdown.MD))
+        @test occursin("It looks like you kept the placeholder", string(Bisect.parse_args("<args>")::Markdown.MD))
+        err = string(Bisect.parse_args("abc=3, abc=4")::Markdown.MD)
+        @test occursin("is not a valid key", err)
+        @test occursin("Duplicate key", err)
+        @test occursin("is not a valid key", string(Bisect.parse_args("abc=3")::Markdown.MD))
+        @test occursin("Duplicate key", string(Bisect.parse_args("new=3, new=3")::Markdown.MD))
+        @test occursin("is not a valid key", string(Bisect.parse_args("new=3, Old=asjd")::Markdown.MD))
+        @test Bisect.parse_args("new=3, old=asjd,") isa Markdown.MD
+    end
+
+    @testset "parse_args success" begin
+        @test Bisect.parse_args("new=1, old \t= 2") == Dict("new" => "1", "old" => "2")
+        @test Bisect.parse_args("") isa Dict{String, String}
+        @test Bisect.parse_args("") == Dict{String, String}()
+        @test Bisect.parse_args("  \t") == Dict{String, String}()
+        @test Bisect.parse_args("old= <s.%h:q @v ") == Dict("old" => "<s.%h:q @v")
+        @test Bisect.parse_args("old=HEAD~10, new=HEAD") == Dict("old" => "HEAD~10", "new" => "HEAD")
     end
 end
