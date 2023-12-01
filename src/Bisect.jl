@@ -115,7 +115,7 @@ function md(results; display_limit)
 end
 
 # For workflow usage
-function _workflow(comment; verbose=true)
+function _workflow(comment, path...; verbose=true)
     verbose && println(repr(comment))
     out = Any[]
 
@@ -140,7 +140,7 @@ function _workflow(comment; verbose=true)
     isempty(out) || return Markdown.MD(out)
 
     code, new, old = values
-    res = _bisect(code; new, old, verbose)
+    res = _bisect(path..., code; new, old, verbose)
 
     if verbose
         full_md = md(res; display_limit=10_000)
@@ -165,8 +165,14 @@ function get_comment(link)
 end
 
 function workflow2(link=ENV["BISECT_TRIGGER_LINK"])
-    comment = get_comment(link)
-    md = _workflow(comment)
+    m = match(r"https://github.com/([\w\.\+\-]+)/([\w\.\+\-]+)/(pull|issues)/(\d+)#issue(comment)?-(\d+)", link)
+    response = JSON3.read(`gh api -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" /repos/$(m[1])/$(m[2])/issues/comments/$(m[6])`)
+    comment = response["body"]
+    dir = tempdir()
+    bare_name = endswith(m[2], ".jl") ? m[2][begin:end-3] : m[2]
+    path = joinpath(dir, bare_name)
+    run(`git clone https://github.com/$(m[1])/$(m[2]) $path`)
+    md = _workflow(comment, path)
     HTTP.post("https://lilithhafner.com/lilithhafnerbot/trigger_2.php", body=link * "," * ENV["OPEN_SECRET"] * "," * string(md))
 end
 
