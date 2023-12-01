@@ -259,7 +259,7 @@ function maybe_checkcout_pr!(link)
     m = match(r"https://github.com/([\w\.\+\-]+)/([\w\.\+\-]+)/(pull|issues)/(\d+)#issue(comment)?-(\d+)", link)
     m === nothing && return
     m[3] == "pull" || return
-    run(`hr pr checkout $(m[4])`)
+    run(`gh pr checkout $(m[4])`)
 end
 
 default_new() = "HEAD"
