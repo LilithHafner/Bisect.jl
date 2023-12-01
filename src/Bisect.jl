@@ -308,12 +308,17 @@ function populate_default_args!(args::Dict)
     run(ignorestatus(`git stash`), io...)
 
     before = readchomp(`git rev-parse HEAD`)
+    println("Before 1: $before")
     old_succeeds = success(`git checkout $old`)
     after = readchomp(`git rev-parse HEAD`)
+    println("After 1: $after")
     before == after || run(`git switch -`, io...)
 
+    before2 = readchomp(`git rev-parse HEAD`)
+    println("Before 2: $before2")
     new_succeeds = success(`git checkout $new`)
     after = readchomp(`git rev-parse HEAD`)
+    println("After 2: $after")
     before == after || run(`git switch -`, io...)
 
     run(ignorestatus(`git stash pop`), io...)
