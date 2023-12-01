@@ -159,7 +159,7 @@ function parse_comment(comment::AbstractString)
     """
 
     if code === nothing
-        alt = match(r"```(.*)[\r\n]+(.|[\r\n])*?[\r\n]+ ?```", comment)
+        alt = match(r"```(.*?)[\r\n]+(.|[\r\n])*?[\r\n]+ ?```", comment)
         return if alt === nothing
             md"""
             ### ⚠️ Parse Error
