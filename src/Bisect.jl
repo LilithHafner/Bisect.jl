@@ -300,29 +300,15 @@ function populate_default_args!(args::Dict)
     get!(default_old, args, "old")
     get!(default_new, args, "new")
 
-    # TODO make this more robustly stateless
-    io = ()#devnull, devnull, devnull
+    # TODO make this more robust.
+    io = devnull, devnull, devnull
     old = args["old"]
     new = args["new"]
-
-    run(ignorestatus(`git stash`), io...)
-
-    before = readchomp(`git rev-parse HEAD`)
-    println("Before 1: $before")
+    initial_ref = readchomp(`sh -c 'git symbolic-ref --short HEAD || git rev-parse HEAD'`)
     old_succeeds = success(`git checkout $old`)
-    println("Old succeeds: $old_succeeds")
-    after = readchomp(`git rev-parse HEAD`)
-    println("After 1: $after")
-    before == after || run(`git switch - --detach`, io...)
-
-    before2 = readchomp(`git rev-parse HEAD`)
-    println("Before 2: $before2")
+    run(`git checkout $initial_ref`, io...)
     new_succeeds = success(`git checkout $new`)
-    println("New succeeds: $new_succeeds")
-    after = readchomp(`git rev-parse HEAD`)
-    println("After 2: $after")
-    before == after || run(`git switch - --detach`, io...)
-
+    run(`git checkout $initial_ref`, io...)
     run(ignorestatus(`git stash pop`), io...)
 
     if !old_succeeds || !new_succeeds
