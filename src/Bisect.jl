@@ -264,26 +264,25 @@ end
 default_new() = "HEAD"
 
 function get_tags()
-    tags = Tuple{VersionNumber, String}[]
+    tags = Pair{VersionNumber, String}[]
     for tag in eachline(`git tag`)
         version = try
             VersionNumber(tag)
         catch
             nothing
         end
-        version !== nothing && push!(tags, (version, tag))
+        version !== nothing && push!(tags, version => tag)
     end
     tags
 end
 function get_first_commit()
-    commits = readlines(`git rev-list --max-parents=0 HEAD`)
+    commits = reverse!(readlines(`git rev-list --max-parents=0 HEAD`))
     times = map(hash -> readchomp(`git show -s --format=%ct $hash`), commits)
     commits[argmin(times)]
 end
 function default_old() # TODO: test this more thoroughly
     tags = get_tags()
     isempty(tags) && return get_first_commit()
-    any(x -> isempty(x[1].build), tags) && filter!(x -> isempty(x[1].build), tags) # Prefer no build data
     any(x -> isempty(x[1].prerelease), tags) && filter!(x -> isempty(x[1].prerelease), tags) # Prefer full release
     if all(x -> iszero(x[1].major), tags)
         latest_minor = maximum(x -> x[1].minor, tags)

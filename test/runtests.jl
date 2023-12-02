@@ -255,4 +255,108 @@ using Markdown
         @test response isa Bisect.HTTP.Messages.Response
         @test response.status == 200
     end
+
+    @testset "get_tags(), get_first_commit(), and default_old()" begin
+        cd(mktempdir()) do
+            run(`git init -b main`)
+
+            if get(ENV, "CI", "false") == "true"
+                run(`git config user.email "CI@example.com"`)
+                run(`git config user.name "CI"`)
+            end
+
+            run(`git commit --allow-empty -m "first commit"`)
+            root = readchomp(`git rev-parse --verify HEAD`)
+            @testset "no tags" begin
+                @test isempty(Bisect.get_tags())
+                @test Bisect.get_first_commit() == root
+                @test Bisect.default_old() == root
+
+                run(`git commit --allow-empty -m "second commit"`)
+
+                @test isempty(Bisect.get_tags())
+                @test Bisect.get_first_commit() == root
+                @test Bisect.default_old() == root
+
+                run(`git checkout --orphan second-root`)
+                run(`git commit --allow-empty -m "first commit on second root"`)
+                root2 = readchomp(`git rev-parse --verify HEAD`)
+
+                @test isempty(Bisect.get_tags())
+                @test Bisect.get_first_commit() == root2
+                @test Bisect.default_old() == root2
+
+                run(`git checkout main`)
+                run(`git merge --allow-unrelated-histories --no-edit second-root`)
+
+                @test isempty(Bisect.get_tags())
+                @test Bisect.get_first_commit() == root
+                @test Bisect.default_old() == root
+
+                sleep(1.1)
+
+                run(`git checkout --orphan third-root`)
+                run(`git commit --allow-empty -m "first commit on third root"`)
+                root3 = readchomp(`git rev-parse --verify HEAD`)
+
+                @test isempty(Bisect.get_tags())
+                @test Bisect.get_first_commit() == root3
+                @test Bisect.default_old() == root3
+
+                run(`git checkout main`)
+                run(`git merge --allow-unrelated-histories --no-edit third-root`)
+
+                @test isempty(Bisect.get_tags())
+                @test Bisect.get_first_commit() == root
+                @test Bisect.default_old() == root
+            end
+
+            @testset "tags" begin
+                run(`git tag -a -m "first tag" first-tag`)
+
+                @test isempty(Bisect.get_tags())
+                @test Bisect.get_first_commit() == root
+                @test Bisect.default_old() == root
+
+                run(`git commit --allow-empty -m "another commit"`)
+                run(`git tag -a -m "v1.0.0-beta" v1.0.0-beta`)
+
+                @test Bisect.get_tags() == [v"1-beta" => "v1.0.0-beta"]
+                @test Bisect.get_first_commit() == root
+                @test Bisect.default_old() == "v1.0.0-beta"
+
+                run(`git commit --allow-empty -m "another commit 2"`)
+                run(`git tag -a -m "v0.0.0" v0.0.0`)
+
+                @test sort(Bisect.get_tags()) == [v"0" => "v0.0.0", v"1-beta" => "v1.0.0-beta"]
+                @test Bisect.get_first_commit() == root
+                @test Bisect.default_old() == "v0.0.0"
+
+                run(`git commit --allow-empty -m "yet another commit"`)
+                run(`git tag -a -m "0.0.1" 0.0.1`)
+                @test sort(Bisect.get_tags()) == [v"0" => "v0.0.0", v"0.0.1" => "0.0.1", v"1-beta" => "v1.0.0-beta"]
+                @test Bisect.default_old() == "v0.0.0"
+
+                run(`git commit --allow-empty -m "1.0+1"`)
+                run(`git tag -a -m "1.0+1" 1.0+1`)
+                @test sort(Bisect.get_tags()) == [v"0" => "v0.0.0", v"0.0.1" => "0.0.1", v"1-beta" => "v1.0.0-beta", v"1+1" => "1.0+1"]
+                @test Bisect.default_old() == "1.0+1"
+
+                run(`git commit --allow-empty -m "1.0"`)
+                run(`git tag -a -m "1.0" 1.0`)
+                @test sort(Bisect.get_tags()) == [v"0" => "v0.0.0", v"0.0.1" => "0.0.1", v"1-beta" => "v1.0.0-beta", v"1.0" => "1.0", v"1+1" => "1.0+1"]
+                @test Bisect.default_old() == "1.0"
+
+                run(`git commit --allow-empty -m "1.1"`)
+                run(`git tag -a -m "1.1" 1.1`)
+                @test sort(Bisect.get_tags()) == [v"0" => "v0.0.0", v"0.0.1" => "0.0.1", v"1-beta" => "v1.0.0-beta", v"1.0" => "1.0", v"1+1" => "1.0+1", v"1.1" => "1.1"]
+                @test Bisect.default_old() == "1.0"
+
+                run(`git commit --allow-empty -m "2.0"`)
+                run(`git tag -a -m "2.0" 2.0`)
+                @test sort(Bisect.get_tags()) == [v"0" => "v0.0.0", v"0.0.1" => "0.0.1", v"1-beta" => "v1.0.0-beta", v"1.0" => "1.0", v"1+1" => "1.0+1", v"1.1" => "1.1", v"2.0" => "2.0"]
+                @test Bisect.default_old() == "2.0"
+            end
+        end
+    end
 end
