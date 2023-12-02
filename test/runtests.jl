@@ -258,12 +258,12 @@ using Markdown
 
     @testset "get_tags(), get_first_commit(), and default_old()" begin
         cd(mktempdir()) do
+            run(`git init -b main`)
+
             if get(ENV, "CI", "false") == "true"
                 run(`git config user.email "CI@example.com"`)
                 run(`git config user.name "CI"`)
             end
-
-            run(`git init -b main`)
 
             run(`git commit --allow-empty -m "first commit"`)
             root = readchomp(`git rev-parse --verify HEAD`)
