@@ -283,7 +283,6 @@ end
 function default_old() # TODO: test this more thoroughly
     tags = get_tags()
     isempty(tags) && return get_first_commit()
-    any(x -> isempty(x[1].build), tags) && filter!(x -> isempty(x[1].build), tags) # Prefer no build data
     any(x -> isempty(x[1].prerelease), tags) && filter!(x -> isempty(x[1].prerelease), tags) # Prefer full release
     if all(x -> iszero(x[1].major), tags)
         latest_minor = maximum(x -> x[1].minor, tags)

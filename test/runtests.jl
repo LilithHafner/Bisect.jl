@@ -319,35 +319,42 @@ using Markdown
                 @test Bisect.default_old() == root
 
                 run(`git commit --allow-empty -m "another commit"`)
+                run(`git tag -a -m "v1.0.0-beta" v1.0.0-beta`)
+
+                @test Bisect.get_tags() == [v"1-beta" => "v1.0.0-beta"]
+                @test Bisect.get_first_commit() == root
+                @test Bisect.default_old() == "v1.0.0-beta"
+
+                run(`git commit --allow-empty -m "another commit 2"`)
                 run(`git tag -a -m "v0.0.0" v0.0.0`)
 
-                @test Bisect.get_tags() == [v"0" => "v0.0.0"]
+                @test sort(Bisect.get_tags()) == [v"0" => "v0.0.0", v"1-beta" => "v1.0.0-beta"]
                 @test Bisect.get_first_commit() == root
                 @test Bisect.default_old() == "v0.0.0"
 
                 run(`git commit --allow-empty -m "yet another commit"`)
                 run(`git tag -a -m "0.0.1" 0.0.1`)
-                @test sort(Bisect.get_tags()) == [v"0" => "v0.0.0", v"0.0.1" => "0.0.1"]
+                @test sort(Bisect.get_tags()) == [v"0" => "v0.0.0", v"0.0.1" => "0.0.1", v"1-beta" => "v1.0.0-beta"]
                 @test Bisect.default_old() == "v0.0.0"
 
-                run(`git commit --allow-empty -m "1.0-rc1"`)
-                run(`git tag -a -m "1.0-rc1" 1.0-rc1`)
-                @test sort(Bisect.get_tags()) == [v"0" => "v0.0.0", v"0.0.1" => "0.0.1", v"1.0-rc1" => "1.0-rc1"]
-                @test Bisect.default_old() == "v0.0.0"
+                run(`git commit --allow-empty -m "1.0+1"`)
+                run(`git tag -a -m "1.0+1" 1.0+1`)
+                @test sort(Bisect.get_tags()) == [v"0" => "v0.0.0", v"0.0.1" => "0.0.1", v"1-beta" => "v1.0.0-beta", v"1+1" => "1.0+1"]
+                @test Bisect.default_old() == "1.0+1"
 
                 run(`git commit --allow-empty -m "1.0"`)
                 run(`git tag -a -m "1.0" 1.0`)
-                @test sort(Bisect.get_tags()) == [v"0" => "v0.0.0", v"0.0.1" => "0.0.1", v"1.0-rc1" => "1.0-rc1", v"1.0" => "1.0"]
+                @test sort(Bisect.get_tags()) == [v"0" => "v0.0.0", v"0.0.1" => "0.0.1", v"1-beta" => "v1.0.0-beta", v"1.0" => "1.0", v"1+1" => "1.0+1"]
                 @test Bisect.default_old() == "1.0"
 
                 run(`git commit --allow-empty -m "1.1"`)
                 run(`git tag -a -m "1.1" 1.1`)
-                @test sort(Bisect.get_tags()) == [v"0" => "v0.0.0", v"0.0.1" => "0.0.1", v"1.0-rc1" => "1.0-rc1", v"1.0" => "1.0", v"1.1" => "1.1"]
+                @test sort(Bisect.get_tags()) == [v"0" => "v0.0.0", v"0.0.1" => "0.0.1", v"1-beta" => "v1.0.0-beta", v"1.0" => "1.0", v"1+1" => "1.0+1", v"1.1" => "1.1"]
                 @test Bisect.default_old() == "1.0"
 
                 run(`git commit --allow-empty -m "2.0"`)
                 run(`git tag -a -m "2.0" 2.0`)
-                @test sort(Bisect.get_tags()) == [v"0" => "v0.0.0", v"0.0.1" => "0.0.1", v"1.0-rc1" => "1.0-rc1", v"1.0" => "1.0", v"1.1" => "1.1", v"2.0" => "2.0"]
+                @test sort(Bisect.get_tags()) == [v"0" => "v0.0.0", v"0.0.1" => "0.0.1", v"1-beta" => "v1.0.0-beta", v"1.0" => "1.0", v"1+1" => "1.0+1", v"1.1" => "1.1", v"2.0" => "2.0"]
                 @test Bisect.default_old() == "2.0"
             end
         end
