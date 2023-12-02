@@ -1,15 +1,17 @@
 # Bisect
 
-[![Stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://LilithHafner.github.io/Bisect.jl/stable/)
-[![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://LilithHafner.github.io/Bisect.jl/dev/)
+<!--[![Stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://LilithHafner.github.io/Bisect.jl/stable/)-->
+<!--[![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://LilithHafner.github.io/Bisect.jl/dev/)-->
 [![Build Status](https://github.com/LilithHafner/Bisect.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/LilithHafner/Bisect.jl/actions/workflows/CI.yml?query=branch%3Amain)
 [![Coverage](https://codecov.io/gh/LilithHafner/Bisect.jl/branch/main/graph/badge.svg)](https://codecov.io/gh/LilithHafner/Bisect.jl)
-[![PkgEval](https://JuliaCI.github.io/NanosoldierReports/pkgeval_badges/B/Bisect.svg)](https://JuliaCI.github.io/NanosoldierReports/pkgeval_badges/B/Bisect.html)
 [![Aqua](https://raw.githubusercontent.com/JuliaTesting/Aqua.jl/master/badge.svg)](https://github.com/JuliaTesting/Aqua.jl)
+<!--[![PkgEval](https://JuliaCI.github.io/NanosoldierReports/pkgeval_badges/B/Bisect.svg)](https://JuliaCI.github.io/NanosoldierReports/pkgeval_badges/B/Bisect.html)-->
 
-Development status: unreleased
+## Development status: pre-release
 
-No commitment is made to backward compatibility and little effort is directed toward current user experience or maintaining high transient reliability.
+As far as I can tell, this tool is fully functional, tested, and ready for widespread use. 
+However, it is not officially released—while I'll make some effort to keep backward 
+compatibility I make no firm commitments. Early user feedback may warrant breaking changes.
 
 # Usage
 
@@ -63,14 +65,15 @@ The default value for `new` is "HEAD", which for issues, points to the head of h
 branch and for pull requests, points to the head of the pull request branch (even if that
 pull request is from a fork!)
 
-The default value for `old` is more complicated. We attempts to find the oldest release on
+The default value for `old` is more complicated. We attempt to find the oldest release on
 the current breaking version (e.g. "v1.0.0"). The exact details are subject to change, but the current
 implementation is
 
 - Filter down to tags that can be parsed by `VersionString`
-- If possible, filter out any tags that have a prerelease or build component
+- If possible, filter out any tags that have a prerelease component
 - If there's any tag with a nonzero major version, keep only tags with the highest major version
-  and otherwise keep only tags with the highest minor version
+  and otherwise keep only tags with the highest minor version (prefer v1.0.0 over both 0.7.4 and
+  1.1.2)
 - Of the remaining tags, take the earliest according to symbolic version comparison breaking
   ties lexicographically (e.g. if your repo has both a 1.0.0 tag and a v1.0.0 tag, this will
   prefer 1.0.0)
