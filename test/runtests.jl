@@ -154,10 +154,12 @@ using Markdown
         @test occursin("Bisect failed", string(workflow2))
     end
 
-    @testset "get_comment" begin
-        @test Bisect.get_comment("https://github.com/LilithHafner/Bisect.jl/pull/5#issuecomment-1834044633") == "hello from a file\n"
-        @test Bisect.get_comment("https://github.com/LilithHafner/Bisect.jl/pull/5#issuecomment-1833915675") == "@LilithHafnerBot bisect()"
-        @test_broken Bisect.get_comment("https://github.com/LilithHafner/Bisect.jl/issues/8#issue-2017841366") == "Ref: https://github.com/LilithHafner/Bisect.jl/pull/5#issuecomment-1833079041"
+    @testset "get_link_info" begin
+        @test Bisect.get_link_info("https://github.com/LilithHafner/Bisect.jl/pull/5#issuecomment-1834044633") == (repo="LilithHafner/Bisect.jl", bare_name="Bisect", comment="hello from a file\n")
+        @test Bisect.get_link_info("https://github.com/LilithHafner/Bisect.jl/pull/5#issuecomment-1833915675") == (repo="LilithHafner/Bisect.jl", bare_name="Bisect", comment="@LilithHafnerBot bisect()")
+        @test Bisect.get_link_info("https://github.com/LilithHafner/Bisect.jl/issues/8") == (repo="LilithHafner/Bisect.jl", bare_name="Bisect", comment="Ref: https://github.com/LilithHafner/Bisect.jl/pull/5#issuecomment-1833079041")
+        @test Bisect.get_link_info("https://github.com/JuliaCollections/SortingAlgorithms.jl/issues/81") == (repo="JuliaCollections/SortingAlgorithms.jl", bare_name="SortingAlgorithms", comment="Following [this](https://app.slack.com/client/T68168MUP) slack thread, it would be nice to have an implementation of [std::partition](https://en.cppreference.com/w/cpp/algorithm/partition).")
+        @test Bisect.get_link_info("https://github.com/JuliaLang/julia/pull/50372") == (repo="JuliaLang/julia", bare_name="julia", comment="Fix for #50352 ")
     end
 
     @testset "parse_comment parse errors" begin
