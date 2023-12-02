@@ -247,4 +247,12 @@ using Markdown
         @test Bisect.parse_args("old= <s.%h:q @v ") == Dict("old" => "<s.%h:q @v")
         @test Bisect.parse_args("old=HEAD~10, new=HEAD") == Dict("old" => "HEAD~10", "new" => "HEAD")
     end
+
+    @testset "workflow() doesn't throw" begin
+        ENV["BISECT_AUTH"] = "test"
+        ENV["BISECT_TRIGGER_LINK"] = "https://github.com/LilithHafner/Bisect.jl/pull/5#issuecomment-1836868167"
+        response = Bisect.workflow()
+        @test response isa Bisect.HTTP.Messages.Response
+        @test response.status == 200
+    end
 end

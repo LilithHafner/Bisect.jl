@@ -356,7 +356,8 @@ function get_comment(link) # TODO: this is unused
     response["body"]
 end
 
-function workflow(link=ENV["BISECT_TRIGGER_LINK"])
+function workflow()
+    link=ENV["BISECT_TRIGGER_LINK"]
     m = match(r"https://github.com/([\w\.\+\-]+)/([\w\.\+\-]+)/(pull|issues)/(\d+)#issue(comment)?-(\d+)", link)
     response = JSON3.read(`gh api -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" /repos/$(m[1])/$(m[2])/issues/comments/$(m[6])`)
     comment = response["body"]
