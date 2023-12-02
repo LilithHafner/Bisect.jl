@@ -13,9 +13,10 @@ No commitment is made to backward compatibility and little effort is directed to
 
 # Usage
 
-## What this does
-
-TODO
+If you have a snippet of Julia code that you suspect behaves differently on different 
+versions of a repo, you can post that code in a comment on github and ask
+@LilithHafnerBot to figure out exactly which commit changed its behavior. The robot will run 
+a bisection and respond with its results.
 
 ## Who can use this tool
 
