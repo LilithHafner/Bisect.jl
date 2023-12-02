@@ -349,22 +349,21 @@ function _workflow(link, comment, path; verbose=true)
 end
 
 using JSON3, HTTP
-function get_comment(link) # TODO: this is unused
+function get_link_info(link)
     m = match(r"https://github.com/([\w\.\+\-]+)/([\w\.\+\-]+)/(pull|issues)/(\d+)#issue(comment)?-(\d+)", link)
-    response = JSON3.read(`gh api -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" /repos/$(m[1])/$(m[2])/issues/comments/$(m[6])`)
-    response["body"]
+    comment = JSON3.read(`gh api -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" /repos/$(m[1])/$(m[2])/issues/comments/$(m[6])`)["body"]
+    bare_name = endswith(m[2], ".jl") ? m[2][begin:end-3] : m[2]
+    repo = m[1] * "/" * m[2]
+    (; comment, bare_name, repo)
 end
 
 function workflow()
-    link=ENV["BISECT_TRIGGER_LINK"]
-    m = match(r"https://github.com/([\w\.\+\-]+)/([\w\.\+\-]+)/(pull|issues)/(\d+)#issue(comment)?-(\d+)", link)
-    response = JSON3.read(`gh api -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" /repos/$(m[1])/$(m[2])/issues/comments/$(m[6])`)
-    comment = response["body"]
-    dir = mktempdir()
-    bare_name = endswith(m[2], ".jl") ? m[2][begin:end-3] : m[2]
-    path = joinpath(dir, bare_name)
-    run(`git clone https://github.com/$(m[1])/$(m[2]) $path`)
-    md = _workflow(link, comment, path)
+    link = ENV["BISECT_TRIGGER_LINK"]
+    link_info = get_link_info(link)
+    dir = tempdir()
+    path = joinpath(dir, link_info.bare_name)
+    run(`git clone https://github.com/$(link_info.repo) $path`)
+    md = _workflow(link, link_info.comment, path)
     HTTP.post("https://lilithhafner.com/lilithhafnerbot/trigger_2.php", body=ENV["BISECT_AUTH"] * "," * link * "," * string(md))
 end
 

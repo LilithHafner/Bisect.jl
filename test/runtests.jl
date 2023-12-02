@@ -154,10 +154,10 @@ using Markdown
         @test occursin("Bisect failed", string(workflow2))
     end
 
-    @testset "get_comment" begin
-        @test Bisect.get_comment("https://github.com/LilithHafner/Bisect.jl/pull/5#issuecomment-1834044633") == "hello from a file\n"
-        @test Bisect.get_comment("https://github.com/LilithHafner/Bisect.jl/pull/5#issuecomment-1833915675") == "@LilithHafnerBot bisect()"
-        @test_broken Bisect.get_comment("https://github.com/LilithHafner/Bisect.jl/issues/8#issue-2017841366") == "Ref: https://github.com/LilithHafner/Bisect.jl/pull/5#issuecomment-1833079041"
+    @testset "get_link_info" begin
+        @test Bisect.get_link_info("https://github.com/LilithHafner/Bisect.jl/pull/5#issuecomment-1834044633") == (comment="hello from a file\n", bare_name="Bisect", repo="LilithHafner/Bisect.jl")
+        @test Bisect.get_link_info("https://github.com/LilithHafner/Bisect.jl/pull/5#issuecomment-1833915675") == (comment="@LilithHafnerBot bisect()", bare_name="Bisect", repo="LilithHafner/Bisect.jl")
+        @test_broken Bisect.get_link_info("https://github.com/LilithHafner/Bisect.jl/issues/8#issue-2017841366") == (comment="Ref: https://github.com/LilithHafner/Bisect.jl/pull/5#issuecomment-1833079041", bare_name="Bisect", repo="LilithHafner/Bisect.jl")
     end
 
     @testset "parse_comment parse errors" begin
