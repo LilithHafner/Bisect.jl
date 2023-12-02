@@ -350,17 +350,23 @@ end
 
 using JSON3, HTTP
 function get_link_info(link)
-    m = match(r"https://github.com/([\w\.\+\-]+)/([\w\.\+\-]+)/(pull|issues)/(\d+)#issue(comment)?-(\d+)", link)
-    comment = JSON3.read(`gh api -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" /repos/$(m[1])/$(m[2])/issues/comments/$(m[6])`)["body"]
-    bare_name = endswith(m[2], ".jl") ? m[2][begin:end-3] : m[2]
+    m = match(r"https://github.com/([\w\.\+\-]+)/([\w\.\+\-]+)/(pull|issues)/(\d+)(#issue(comment)?-(\d+))?", link)
     repo = m[1] * "/" * m[2]
-    (; comment, bare_name, repo)
+    bare_name = endswith(m[2], ".jl") ? m[2][begin:end-3] : m[2]
+    comment_cmd = if m[7] === nothing
+        `gh issue view $(m[4]) --repo $repo --json body`
+    else
+        `gh api -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" /repos/$repo/issues/comments/$(m[7])`
+    end
+    comment = JSON3.read(comment_cmd)["body"]
+
+    (; repo, bare_name, comment)
 end
 
 function workflow()
     link = ENV["BISECT_TRIGGER_LINK"]
     link_info = get_link_info(link)
-    dir = tempdir()
+    dir = mktempdir()
     path = joinpath(dir, link_info.bare_name)
     run(`git clone https://github.com/$(link_info.repo) $path`)
     md = _workflow(link, link_info.comment, path)
