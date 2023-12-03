@@ -18,6 +18,7 @@ function _bisect(code;
         get_status=()->readchomp(`$git rev-parse HEAD`),
         auto_print=true,
         verbose=false,
+        setup=nothing,
         io=verbose ? () : (devnull, devnull, devnull))
 
     code = auto_print ? "print(begin $code\nend)" : code
@@ -28,12 +29,12 @@ function _bisect(code;
         news = Vector{Pair{String, Tuple{Int, String, String}}}()
 
         run(`$git checkout $new`, io...)
-        new_val = test(julia, code)
+        new_val = test(setup, julia, code)
         push!(news, get_status()=>new_val)
         run(`$git bisect new`, io...)
 
         run(`$git checkout $old`, io...)
-        old_val = test(julia, code)
+        old_val = test(setup, julia, code)
         push!(olds, get_status()=>old_val)
         status = match(r"([0-9a-f]{40}) is the first new commit", readchomp(`$git bisect old`))
 
@@ -47,7 +48,7 @@ function _bisect(code;
 
 
         while status === nothing
-            test_val = test(julia, code)
+            test_val = test(setup, julia, code)
             test_cmp = get_comparison_value(test_val)
             res = if test_cmp == old_cmp
                 push!(olds, get_status()=>test_val)
@@ -68,7 +69,8 @@ function _bisect(code;
     end
 end
 
-function test(julia, code)
+function test(setup, julia, code)
+    setup !== nothing && run(setup)
     out=IOBuffer()
     err=IOBuffer()
     p = run(`$julia --project -e $code`, devnull, out, err, wait=false)
@@ -323,7 +325,7 @@ function populate_default_args!(args::Dict)
     end
 end
 
-function _workflow(link, comment, path; verbose=true)
+function _workflow(link, comment, path, bare_name; verbose=true)
     verbose && println(link)
     verbose && println(repr(comment))
 
@@ -342,7 +344,11 @@ function _workflow(link, comment, path; verbose=true)
 
         verbose && println(args)
 
-        _bisect(code; new=args["new"], old=args["old"], verbose)
+        # The `bare_name == "julia"` branch is untested because
+        # building Julia takes an inconveniently long time.
+        kw = bare_name == "julia" ? (setup=`make`, julia=`./julia`) : ()
+
+        _bisect(code; new=args["new"], old=args["old"], verbose, kw...)
     end
 
     res isa Markdown.MD && (verbose && display(res); return res)
@@ -375,7 +381,7 @@ function workflow()
         dir = mktempdir()
         path = joinpath(dir, link_info.bare_name)
         run(`git clone https://github.com/$(link_info.repo) $path`)
-        md = _workflow(link, link_info.comment, path)
+        md = _workflow(link, link_info.comment, path, link_info.bare_name)
         post(md)
     catch
         post(md"""

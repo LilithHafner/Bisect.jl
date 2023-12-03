@@ -66,7 +66,7 @@ using Markdown
         ```julla
         1+1 == 2
         ```
-        """, @__DIR__, verbose=false)) == """
+        """, @__DIR__, "", verbose=false)) == """
         ### ❗ Internal Error
 
         Could not find `@LilithHafnerBot bisect`
@@ -78,7 +78,7 @@ using Markdown
         ```julla
         1+1 == 2
         ```
-        """, @__DIR__, verbose=false)) == """
+        """, @__DIR__, "", verbose=false)) == """
         ### ⚠️ Parse Error
 
         I found `@LilithHafnerBot bisect(<args>)` and a code block, but the code block was not tagged with "julla", not "julia". I can currently only handle julia code.
@@ -90,7 +90,7 @@ using Markdown
         ```julia
         1+1 == 2
         ```
-        """, @__DIR__, verbose=false)) == """
+        """, @__DIR__, "", verbose=false)) == """
         ### ⚠️ Parse Error
 
         I don't understand the ref "deadbeef".
@@ -104,7 +104,7 @@ using Markdown
         ```julia
         1+1 == 2
         ```
-        """, @__DIR__, verbose=false)) == """### ⚠️ Parse Error
+        """, @__DIR__, "", verbose=false)) == """### ⚠️ Parse Error
 
         I don't understand the refs "livebeef" or "deadbeef".
 
@@ -141,14 +141,14 @@ using Markdown
         ```julia
         length(read("runtests.jl")) == 178
         ```
-        """, @__DIR__, verbose=false)
+        """, @__DIR__, "", verbose=false)
         standard = bisect(@__DIR__, """length(read("runtests.jl")) == 178""", old="06051c5cf084fefc43b06bf2527960db6489a6ec", new="HEAD")
         @test workflow == standard
         @test occursin("Bisect succeeded", string(workflow))
 
         # Strange newline characters
         comment = "`@LilithHafnerBot bisect(new=main, old=06051c5cf084fefc43b06bf2527960db6489a6ec)`\r \r `new=main`\r `old = 06051c5cf084fefc43b06bf2527960db6489a6ec`\r \r ```julia\r @assert 1+1 == 2\r ```\n"
-        workflow2 = Bisect._workflow("no link", comment, @__DIR__, verbose=false)
+        workflow2 = Bisect._workflow("no link", comment, @__DIR__, "", verbose=false)
         standard2 = bisect(@__DIR__, """@assert 1+1 == 2""", old="06051c5cf084fefc43b06bf2527960db6489a6ec", new="main")
         @test workflow2 == standard2
         @test occursin("Bisect failed", string(workflow2))
