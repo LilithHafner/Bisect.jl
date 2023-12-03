@@ -73,6 +73,8 @@ function test(julia, code)
     err=IOBuffer()
     p = run(`$julia --project -e $code`, devnull, out, err, wait=false)
     wait(p)
+    # TODO add tests where this is necessary (e.g. `Pkg.add("dep")`)
+    run(ignorestatus(`git checkout .`)) # ignorestatus because there may be no files in the whole repo
     p.exitcode, String(take!(out)), String(take!(err))
 end
 
