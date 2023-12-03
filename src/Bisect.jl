@@ -71,7 +71,7 @@ function _bisect(code;
 end
 
 function test(setup, julia, code)
-    setup !== nothing && run(setup)
+    setup !== nothing && run.(setup)
     out=IOBuffer()
     err=IOBuffer()
     p = run(`$julia --project -e $code`, devnull, out, err, wait=false)
@@ -347,7 +347,9 @@ function _workflow(link, comment, path, bare_name; verbose=true)
 
         # The `bare_name == "julia"` branch is untested because
         # building Julia takes an inconveniently long time.
-        kw = bare_name == "julia" ? (setup=`make`, julia=`./julia`) : ()
+        # Disables checksum verification to work around
+        # https://github.com/JuliaLang/julia/issues/51408
+        kw = bare_name == "julia" ? (setup=(`sed -i.bak 's/"\$TRUE_CHECKSUM" != "\$CURR_CHECKSUM"/0 != 0/' deps/tools/jlchecksum`,`make`), julia=`./julia`) : ()
 
         _bisect(code; new=args["new"], old=args["old"], verbose, kw...)
     end
