@@ -27,6 +27,11 @@ need any permissions to invoke a bisection. You may execute arbitrary bisection 
 on any public repository, whether or not you have any permissions in that repository.
 See [Security](#security) for how we make this possible.
 
+## Installation
+
+None required. @LilithHafnerBot is already watching all github repositories. Open an
+issue if you would like to opt out.
+
 ## Invocation syntax
 
 An invocation is a github comment with a trigger and a code block. For example,
