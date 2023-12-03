@@ -231,13 +231,12 @@ function parse_args(args)
             push!(err, Markdown.Paragraph("Argument \"$st_arg\" has multiple \"=\" signs"))
         elseif length(kv) == 1
             push!(err, Markdown.Paragraph("Argument \"$st_arg\" has no \"=\" sign"))
-        elseif length(kv) == 2
+        else
+            @assert length(kv) == 2
             k, v = strip.(kv)
             k in allowed_keys || push!(err, Markdown.Paragraph("\"$k\" is not a valid key (valid keys are $allowed_keys_str)"))
             haskey(out, k) && push!(err, Markdown.Paragraph("Duplicate key \"$k\""))
             out[k] = v
-        else
-            push!(err, Markdown.Paragraph("Argument \"$st_arg\" caused an internal error"))
         end
     end
 
