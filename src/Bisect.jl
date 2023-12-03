@@ -365,12 +365,22 @@ end
 
 function workflow()
     link = ENV["BISECT_TRIGGER_LINK"]
-    link_info = get_link_info(link)
-    dir = mktempdir()
-    path = joinpath(dir, link_info.bare_name)
-    run(`git clone https://github.com/$(link_info.repo) $path`)
-    md = _workflow(link, link_info.comment, path)
-    HTTP.post("https://lilithhafner.com/lilithhafnerbot/trigger_2.php", body=ENV["BISECT_AUTH"] * "," * link * "," * string(md))
+    post(md) = HTTP.post("https://lilithhafner.com/lilithhafnerbot/trigger_2.php", body=ENV["BISECT_AUTH"] * "," * link * "," * string(md))
+    try
+        link_info = get_link_info(link)
+        dir = mktempdir()
+        path = joinpath(dir, link_info.bare_name)
+        run(`git clone https://github.com/$(link_info.repo) $path`)
+        md = _workflow(link, link_info.comment, path)
+        post(md)
+    catch
+        post(md"""
+        ### ❗ Internal Error
+
+        Check the [public logs](https://github.com/LilithHafnerBot/bisect/actions/workflows/Bisect.yml) for more information.
+        """)
+        rethrow()
+    end
 end
 
 end
