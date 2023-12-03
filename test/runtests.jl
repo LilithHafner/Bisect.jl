@@ -12,10 +12,10 @@ using Markdown
         @test startswith(string(bisect(@__DIR__, """length(read("runtests.jl"))""", old="49093a00f4850120d17fa9ef9cae3ff0f37cacfb")), """
         ### ✅ Bisect succeeded! The first new commit is 06051c5cf084fefc43b06bf2527960db6489a6ec
 
-        | Commit                                       | **Exit code** | stdout  | stderr                                                                                           |
-        |:-------------------------------------------- |:------------- |:------- |:------------------------------------------------------------------------------------------------ |
-        | 49093a00f4850120d17fa9ef9cae3ff0f37cacfb     | ❌ (1)         |         | ERROR: SystemError: opening file \"runtests.jl\": No such file or directory⏎Stacktrace:⏎ [1] sy... |
-        | **06051c5cf084fefc43b06bf2527960db6489a6ec** | **✅ (0)**     | **178** | ****                                                                                             |
+        | Commit                                       | **Exit code** | stdout  | stderr                                                                                               |
+        |:-------------------------------------------- |:------------- |:------- |:---------------------------------------------------------------------------------------------------- |
+        | 49093a00f4850120d17fa9ef9cae3ff0f37cacfb     | ❌ (1)         |         | ERROR: SystemError: opening file \"runtests.jl\": No such file or directory⏎Stacktrace:⏎ [1] system... |
+        | **06051c5cf084fefc43b06bf2527960db6489a6ec** | **✅ (0)**     | **178** | ****                                                                                                 |
         """)
 
         res = bisect(@__DIR__, """length(read("runtests.jl")) == 178""", old="06051c5cf084fefc43b06bf2527960db6489a6ec")
@@ -375,14 +375,14 @@ try
         @test only(HTTP_LOG) == ("https://lilithhafner.com/lilithhafnerbot/trigger_2.php", """
         test_key,https://github.com/LilithHafner/Bisect.jl/pull/5#issuecomment-1837292185,### ✅ Bisect succeeded! The first new commit is 06051c5cf084fefc43b06bf2527960db6489a6ec
 
-        | Commit                                       | **Exit code** | stdout   | stderr                                                                                           |
-        |:-------------------------------------------- |:------------- |:-------- |:------------------------------------------------------------------------------------------------ |
-        | 49093a00f4850120d17fa9ef9cae3ff0f37cacfb     | ❌ (1)         |          | ERROR: SystemError: opening file \"test/runtests.jl\": No such file or directory⏎Stacktrace:⏎ [... |
-        | **06051c5cf084fefc43b06bf2527960db6489a6ec** | **✅ (0)**     | **true** | ****                                                                                             |
-        | 21443987ee59b3d9225b8d2f162c9f766b2c84a4     | ✅ (0)         | true     |                                                                                                  |
-        | 0e50dedd40e9726302803650df950ea17e9f758a     | ✅ (0)         | true     |                                                                                                  |
-        | 437431697efdadcb5c04ef4707442a8ab25f6d84     | ✅ (0)         | true     |                                                                                                  |
-        | 534fc58d4c6b2a767189ddf12449f3604c037529     | ✅ (0)         | false    |                                                                                                  |
+        | Commit                                       | **Exit code** | stdout   | stderr                                                                                               |
+        |:-------------------------------------------- |:------------- |:-------- |:---------------------------------------------------------------------------------------------------- |
+        | 49093a00f4850120d17fa9ef9cae3ff0f37cacfb     | ❌ (1)         |          | ERROR: SystemError: opening file \"test/runtests.jl\": No such file or directory⏎Stacktrace:⏎ [1] s... |
+        | **06051c5cf084fefc43b06bf2527960db6489a6ec** | **✅ (0)**     | **true** | ****                                                                                                 |
+        | 21443987ee59b3d9225b8d2f162c9f766b2c84a4     | ✅ (0)         | true     |                                                                                                      |
+        | 0e50dedd40e9726302803650df950ea17e9f758a     | ✅ (0)         | true     |                                                                                                      |
+        | 437431697efdadcb5c04ef4707442a8ab25f6d84     | ✅ (0)         | true     |                                                                                                      |
+        | 534fc58d4c6b2a767189ddf12449f3604c037529     | ✅ (0)         | false    |                                                                                                      |
         """)
 
         empty!(HTTP_LOG)

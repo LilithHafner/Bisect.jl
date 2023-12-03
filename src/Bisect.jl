@@ -98,7 +98,8 @@ function md(results; display_limit)
     push!(rows, Any["Commit"])
     function trunc(s)
         s2 = replace(s, "\n" => "⏎")
-        display_limit !== nothing && length(s2) > display_limit ? s2[1:display_limit-3] * "..." : s2
+        # TODO: add test where `first` is necessary (i.e. naive indexing would give invalid code point)
+        display_limit !== nothing && length(s2) > display_limit ? first(s2, display_limit-3) * "..." : s2
     end
     show_exitcode && push!(rows[end], (compare_by_stdout === false ? Markdown.Bold : identity)("Exit code"))
     show_stdout && push!(rows[end], (compare_by_stdout === true ? Markdown.Bold : identity)("stdout"))
