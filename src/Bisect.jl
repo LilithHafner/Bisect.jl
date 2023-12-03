@@ -257,7 +257,9 @@ function maybe_checkcout_pr!(link)
     m = match(r"https://github.com/([\w\.\+\-]+)/([\w\.\+\-]+)/(pull|issues)/(\d+)#issue(comment)?-(\d+)", link)
     m === nothing && return
     m[3] == "pull" || return
-    run(`gh pr checkout $(m[4])`)
+    # run(`gh pr checkout $(m[4])`) # This fails when the PR has been merged or closed and the remote branch deleted
+    run(`git fetch origin pull/$(m[4])/head:bisect-pr$(m[4])`)
+    run(`git checkout bisect-pr$(m[4])`)
 end
 
 default_new() = "HEAD"
