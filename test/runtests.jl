@@ -12,10 +12,10 @@ using Markdown
         @test startswith(string(bisect(@__DIR__, """length(read("runtests.jl"))""", old="49093a00f4850120d17fa9ef9cae3ff0f37cacfb")), """
         ### ✅ Bisect succeeded! The first new commit is 06051c5cf084fefc43b06bf2527960db6489a6ec
 
-        | Commit                                       | **Exit code** | stdout  | stderr                                                                                           |
-        |:-------------------------------------------- |:------------- |:------- |:------------------------------------------------------------------------------------------------ |
-        | 49093a00f4850120d17fa9ef9cae3ff0f37cacfb     | ❌ (1)         |         | ERROR: SystemError: opening file \"runtests.jl\": No such file or directory⏎Stacktrace:⏎ [1] sy... |
-        | **06051c5cf084fefc43b06bf2527960db6489a6ec** | **✅ (0)**     | **178** | ****                                                                                             |
+        | Commit                                       | **Exit code** | stdout  | stderr                                                                                               |
+        |:-------------------------------------------- |:------------- |:------- |:---------------------------------------------------------------------------------------------------- |
+        | 49093a00f4850120d17fa9ef9cae3ff0f37cacfb     | ❌ (1)         |         | ERROR: SystemError: opening file \"runtests.jl\": No such file or directory⏎Stacktrace:⏎ [1] system... |
+        | **06051c5cf084fefc43b06bf2527960db6489a6ec** | **✅ (0)**     | **178** | ****                                                                                                 |
         """)
 
         res = bisect(@__DIR__, """length(read("runtests.jl")) == 178""", old="06051c5cf084fefc43b06bf2527960db6489a6ec")
