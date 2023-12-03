@@ -45,7 +45,7 @@ using Markdown
 
         | Commit                                   | Exit code | stderr                                                                          |
         |:---------------------------------------- |:--------- |:------------------------------------------------------------------------------- |
-        | 49093a00f4850120d17fa9ef9cae3ff0f37cacfb | ❌ (1)     | ERROR: AssertionError: 1 + 1 == 3⏎Stacktrace:⏎ [1] top-level scope⏎   @ none:2⏎ |
+        | 49093a00f4850120d17fa9ef9cae3ff0f37cacfb | ❌ (1)     | ERROR: AssertionError: 1 + 1 == 3⏎Stacktrace:⏎ [1] top-level scope⏎   @ none:1⏎ |
         | """)
 
         @test startswith(string(bisect(@__DIR__, "rand()", old="49093a00f4850120d17fa9ef9cae3ff0f37cacfb")), "### ❌ Bisect failed\n\n|")

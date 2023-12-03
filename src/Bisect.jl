@@ -20,7 +20,7 @@ function _bisect(code;
         verbose=false,
         io=verbose ? () : (devnull, devnull, devnull))
 
-    code = auto_print ? "print(begin\n$code\nend)" : code
+    code = auto_print ? "print(begin $code\nend)" : code
     run(ignorestatus(`$git stash`), io...)
     run(`$git bisect start`, io...)
     try
