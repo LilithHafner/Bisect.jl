@@ -284,7 +284,7 @@ function get_first_commit()
     times = map(hash -> readchomp(`git show -s --format=%ct $hash`), commits)
     commits[argmin(times)]
 end
-function default_old() # TODO: test this more thoroughly
+function default_old()
     tags = get_tags()
     isempty(tags) && return get_first_commit()
     any(x -> isempty(x[1].prerelease), tags) && filter!(x -> isempty(x[1].prerelease), tags) # Prefer full release
