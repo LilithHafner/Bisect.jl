@@ -250,14 +250,6 @@ using Markdown
         @test Bisect.parse_args("old=HEAD~10, new=HEAD") == Dict("old" => "HEAD~10", "new" => "HEAD")
     end
 
-    @testset "workflow() doesn't throw" begin
-        ENV["BISECT_AUTH"] = "test"
-        ENV["BISECT_TRIGGER_LINK"] = "https://github.com/LilithHafner/Bisect.jl/pull/5#issuecomment-1836868167"
-        response = Bisect.workflow()
-        @test response isa Bisect.HTTP.Messages.Response
-        @test response.status == 200
-    end
-
     @testset "get_tags(), get_first_commit(), and default_old()" begin
         cd(mktempdir()) do
             run(`git init -b main`)
@@ -361,4 +353,40 @@ using Markdown
             end
         end
     end
+end
+
+
+const HTTP_LOG = Tuple{String, String}[]
+@eval Bisect.HTTP.post(url::String; body) = push!(HTTP_LOG, (url, body)) # Terrible piracy, but this is a test and we clean it up
+try
+    @testset "workflow()" begin
+        ENV["BISECT_AUTH"] = "test_key"
+        ENV["BISECT_TRIGGER_LINK"] = "https://github.com/LilithHafner/Bisect.jl/pull/5#issuecomment-1837292185"
+        response = Bisect.workflow()
+        @test response === HTTP_LOG
+
+        @test only(HTTP_LOG) == ("https://lilithhafner.com/lilithhafnerbot/trigger_2.php", """
+        test_key,https://github.com/LilithHafner/Bisect.jl/pull/5#issuecomment-1837292185,### ✅ Bisect succeeded! The first new commit is 06051c5cf084fefc43b06bf2527960db6489a6ec
+
+        | Commit                                       | **Exit code** | stdout   | stderr                                                                                           |
+        |:-------------------------------------------- |:------------- |:-------- |:------------------------------------------------------------------------------------------------ |
+        | 49093a00f4850120d17fa9ef9cae3ff0f37cacfb     | ❌ (1)         |          | ERROR: SystemError: opening file \"test/runtests.jl\": No such file or directory⏎Stacktrace:⏎ [... |
+        | **06051c5cf084fefc43b06bf2527960db6489a6ec** | **✅ (0)**     | **true** | ****                                                                                             |
+        | 21443987ee59b3d9225b8d2f162c9f766b2c84a4     | ✅ (0)         | true     |                                                                                                  |
+        | 0e50dedd40e9726302803650df950ea17e9f758a     | ✅ (0)         | true     |                                                                                                  |
+        | 437431697efdadcb5c04ef4707442a8ab25f6d84     | ✅ (0)         | true     |                                                                                                  |
+        | 534fc58d4c6b2a767189ddf12449f3604c037529     | ✅ (0)         | false    |                                                                                                  |
+        """)
+
+        empty!(HTTP_LOG)
+        ENV["BISECT_TRIGGER_LINK"] = "https://github.com/LilithHafner/Bisect.jl/pull/5#issuecomment-1837292489"
+        @test_throws ProcessFailedException Bisect.workflow()
+        @test only(HTTP_LOG) == ("https://lilithhafner.com/lilithhafnerbot/trigger_2.php", """
+        test_key,https://github.com/LilithHafner/Bisect.jl/pull/5#issuecomment-1837292489,### ❗ Internal Error
+
+        Check the [public logs](https://github.com/LilithHafnerBot/bisect/actions/workflows/Bisect.yml) for more information.
+        """)
+    end
+finally
+    Base.delete_method(Base.which(Bisect.HTTP.post, Tuple{String}))
 end
