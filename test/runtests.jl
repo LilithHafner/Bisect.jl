@@ -362,7 +362,7 @@ try
     @testset "workflow()" begin
         ENV["BISECT_AUTH"] = "test_key"
         ENV["BISECT_TRIGGER_LINK"] = "https://github.com/LilithHafner/Bisect.jl/pull/5#issuecomment-1837292185"
-        response = invokelatest(Bisect.workflow)
+        response = Bisect.workflow()
         @test response === HTTP_LOG
 
         @test only(HTTP_LOG) == ("https://lilithhafner.com/lilithhafnerbot/trigger_2.php", """
@@ -380,7 +380,7 @@ try
 
         empty!(HTTP_LOG)
         ENV["BISECT_TRIGGER_LINK"] = "https://github.com/LilithHafner/Bisect.jl/pull/5#issuecomment-1837292489"
-        @test_throws ProcessFailedException invokelatest(Bisect.workflow)
+        @test_throws ProcessFailedException Bisect.workflow()
         @test only(HTTP_LOG) == ("https://lilithhafner.com/lilithhafnerbot/trigger_2.php", """
         test_key,https://github.com/LilithHafner/Bisect.jl/pull/5#issuecomment-1837292489,### ❗ Internal Error
 
