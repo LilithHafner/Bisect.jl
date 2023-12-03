@@ -65,11 +65,16 @@ function _bisect(code;
         end
         return (olds, reverse(news)), (compare_by_stdout, status[1]) # Bisect succeeded!
     finally
+        cleanup()
         run(`$git bisect reset`, io...)
         run(ignorestatus(`$git stash pop`), io...)
     end
 end
 
+function cleanup()
+    run(`git clean -dfx`, devnull, devnull, devnull)
+    run(ignorestatus(`git checkout .`), devnull, devnull, devnull) # ignorestatus in case there are no files in the repo
+end
 function test(setup, julia, code)
     setup !== nothing && run.(setup)
     out=IOBuffer()
@@ -77,7 +82,7 @@ function test(setup, julia, code)
     p = run(`$julia --project -e $code`, devnull, out, err, wait=false)
     wait(p)
     # TODO add tests where this is necessary (e.g. `Pkg.add("dep")`)
-    run(ignorestatus(`git checkout .`), devnull, devnull, devnull) # ignorestatus because there may be no files in the whole repo
+    cleanup()
     p.exitcode, String(take!(out)), String(take!(err))
 end
 
