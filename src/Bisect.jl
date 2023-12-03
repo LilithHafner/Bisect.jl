@@ -126,13 +126,13 @@ end
 parse a comment into either `(args::String, code::String)` or an error message `err::Markdown.MD`.
 """
 function parse_comment(comment::AbstractString)
-    occursin(r"@LilithHafnerBot\s+bisect", comment) || return md"""
+    occursin(r"@LilithHafnerBot\s+bisect"i, comment) || return md"""
     ### ❗ Internal Error
 
     Could not find `@LilithHafnerBot bisect`
     """
 
-    trigger = match(r"@LilithHafnerBot\s+bisect\((.*?)\)", comment)
+    trigger = match(r"@LilithHafnerBot\s+bisect\((.*?)\)"i, comment)
     code = match(r"```julia[\r\n]+((.|[\r\n])*?)[\r\n]+ ?```", comment)
 
     trigger === nothing && code === nothing && return md"""

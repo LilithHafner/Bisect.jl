@@ -225,6 +225,13 @@ using Markdown
             @assert 1+1 == 2
             ```` @LilithHafnerBot bisect()
             """) == ("", "@assert 1+1 == 2")
+
+
+        @test Bisect.parse_comment(""" Case insensitive
+        ````julia
+        @assert 1+1 == 2
+        ```` @LilithhafnerBOT biSeCt()
+        """) == ("", "@assert 1+1 == 2")
     end
 
     @testset "parse_args errors" begin
