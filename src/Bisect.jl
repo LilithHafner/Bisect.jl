@@ -22,6 +22,7 @@ function _bisect(code;
         io=verbose ? () : (devnull, devnull, devnull))
 
     code = auto_print ? "print(begin $code\nend)" : code
+    get(ENV, "CI", "false") == "true" && run(`$git config --global advice.detachedHead false`)
     run(ignorestatus(`$git stash`), io...)
     run(`$git bisect start`, io...)
     try
