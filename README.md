@@ -84,9 +84,43 @@ implementation is
 
 If no tags are found, the default value for `old` is the oldest commit with no parents.
 
-## Security
+## Security Model
 
-TODO (the documentation, that is. The security is already in place.)
+The @LilithHafnerBot GitHub account sends it's notifications to `<secret-key-1>@proxiedmail.com`.
+proxiedmail.com forwards those emails to LilithHafner@gmail.com and sends an HTTP post request to
+https://lilithhafner.com/lilithhafnerbot/trigger_1.php containing their content.
+
+The servers at lilithhafner.com check that the post request contains `<secret-key-1>` with the regex
+match `<first 10 digits of secret-key-1>(\w{60})@proxiedmail.com` and then verifies that the hash
+of the remianing 60 digits is equal to a known hash. After verifying authentication, those servers
+check to see if the body of the message includes the string `@LilithHfanerBot bisect`. If so, it
+uses the `gh` command line tool and an authentication token for the `@LilithHafnerBot` github account
+to trigger a workflow run at https://github.com/LilithHafnerBot/bisect. It sends that workflow a
+freshly genereated, single use `<key-2>` and the URL of the comment that triggered the notification, 
+and saves that url and key and a timestamp localy. Then the servers add an :eyes: reaction to the 
+triggering comment.
+
+GitHub actions automatically publically logs all arguments to the workflow trigger including `<key-2>`
+with no way to disable that logging. The workflow itself downloads the triggering comment's content,
+parses it, runs a bisection if able, and produces a comment in response. It then posts back to
+https://lilithahfner.com/lilithhafnerbot/trigger_2.php a request containing the key, comment URL, 
+and response message.
+
+The servers at lilithhafner.com verify that the url and key exist in it's local logs with a 
+timestamp from the last 4 hours, verifies the message format looks plausible (notably including
+a check that the length is not too long), checks that that comment url has not been responded to 
+before, checks that the comment contains the string `@LilithHafnerBot bisect`, logs that comment 
+url as having been responded to, and posts the message to github.
+
+### Security claims
+
+- lilithhafner.com is not vulnerable to remote code execution
+- The @LilithHafnerBot github account is secure
+- @LilithHafnerBot cannot be sock-puppetted except for when someone invoked `@LilithHafnerBot bisect` in the last 4 hours
+
+### Attack models
+
+TODO
 
 ### DOS attacks
 
