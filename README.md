@@ -7,11 +7,10 @@
 [![Aqua](https://raw.githubusercontent.com/JuliaTesting/Aqua.jl/master/badge.svg)](https://github.com/JuliaTesting/Aqua.jl)
 <!--[![PkgEval](https://JuliaCI.github.io/NanosoldierReports/pkgeval_badges/B/Bisect.svg)](https://JuliaCI.github.io/NanosoldierReports/pkgeval_badges/B/Bisect.html)-->
 
-## Development status: pre-release
+## Development status: stable
 
 As far as I can tell, this tool is fully functional, tested, and ready for widespread use. 
-However, it is not officially released—while I'll make some effort to keep backward 
-compatibility I make no firm commitments. Early user feedback may warrant breaking changes.
+I will attempt to avoid making any breaking changes going forward.
 
 # Usage
 
